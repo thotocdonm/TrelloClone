@@ -7,26 +7,23 @@ import Icon from '@react-native-vector-icons/fontawesome6';
 import { RootNavigationProp } from '../types/types';
 
 
-const LoginScreen = () => {
+const RegisterScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const navigation = useNavigation<RootNavigationProp<'Login'>>();
+  const [rePassword, setRePassword] = useState('');
+  const navigation = useNavigation<RootNavigationProp<'Register'>>();
 
 
   return (
     <View style={styles.container}>
       <Icon name="trello" size={50} color="#0079BF" iconStyle='brand' />
-      <Text variant='headlineLarge'>Welcome !</Text>
+      <Text variant='headlineLarge'>Register</Text>
       <TextInput style={styles.input} mode='outlined' placeholder="Email" value={email} onChangeText={setEmail} />
       <TextInput style={styles.input} mode='outlined' placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} />
+      <TextInput style={styles.input} mode='outlined' placeholder="Re-enter Password" secureTextEntry value={rePassword} onChangeText={setRePassword} />
       <Button mode='contained' onPress={() =>
-        navigation.replace('Profile',{name:'Son'})
-      }>Login</Button>
-      <View style={styles.registerContainer}>
-        <Text>Don't have an account yet ?</Text>
-        <Button onPress={()=>navigation.navigate('Register')}>Register</Button>
-      </View>
-   
+        navigation.navigate('Login')
+      }>Register</Button>
     </View>
   );
 };
@@ -43,13 +40,7 @@ const styles = StyleSheet.create({
   input:{
     height:50,
     width:250
-  },
-  registerContainer:{
-    display:'flex',
-    justifyContent:'center',
-    alignItems:"center",
-    flexDirection:'row',
   }
 })
 
-export default LoginScreen;
+export default RegisterScreen;
