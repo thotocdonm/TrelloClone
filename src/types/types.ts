@@ -7,6 +7,20 @@ export type RootStackParamList = {
   Register: undefined;
 };
 
+export type BaseResponse<T> = {
+  message:string;
+  status:number;
+  code:string;
+  data:T;
+}
+
+export type BaseListResponse<T> = {
+  message:string;
+  status:number;
+  code:string;
+  data:Array<T>;
+}
+
 // Navigation Prop type
 export type RootNavigationProp<T extends keyof RootStackParamList> =
   NativeStackNavigationProp<RootStackParamList, T>;
