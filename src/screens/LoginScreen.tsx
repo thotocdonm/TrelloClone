@@ -20,8 +20,12 @@ const LoginScreen = () => {
   const setIsAuthenticated = useAuthStore((state) => state.setIsAuthenticated);
 
   const handleLogin = async (email:string,password:string) => {
+    console.log("email",email)
     const res = await authService.login(email,password);
+    
+    console.log("password",password)
     console.log(res)
+    console.log(res.data.access,res.data.refresh)
     if(res && res.code === "SUCCESS"){
       await saveTokens(res.data.access,res.data.refresh);
       setIsAuthenticated(true);
@@ -40,7 +44,7 @@ const LoginScreen = () => {
       <Button mode='contained' onPress={()=>handleLogin(email,password)}>Login</Button>
       <View style={styles.registerContainer}>
         <Text>Don't have an account yet ?</Text>
-        <Button onPress={()=>navigation.navigate('Profile',{name:'ax'})}>Register</Button>
+        <Button onPress={()=>navigation.navigate('Register')}>Register</Button>
       </View>
    
     </View>
