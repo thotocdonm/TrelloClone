@@ -5,6 +5,9 @@ export type RootStackParamList = {
   Login: undefined;
   Profile: { name: string };
   Register: undefined;
+  Workspace: { name: string };
+  MainStack: { screen?: string };
+  Settings: undefined;
 };
 
 export type BaseResponse<T> = {

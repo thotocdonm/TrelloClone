@@ -4,8 +4,11 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import LoginScreen from "../screens/LoginScreen";
 import ProfileScreen from "../screens/ProfileScreen";
 import RegisterScreen from "../screens/RegisterScreen";
+import WorkspaceScreen from "../screens/WorkspaceScreen";
+import DrawerScreen from "../screens/DrawerScreen";
 import * as Keychain from "react-native-keychain";
 import { useAuthStore } from "../store/authStore";
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 const Stack = createNativeStackNavigator();
 
@@ -16,28 +19,31 @@ const AppNavigator = () => {
   useEffect(() => {
     const checkToken = async () => {
       const credentials = await Keychain.getGenericPassword({service: 'com.trello.accessToken'});
-      console.log(credentials)
+      console.log("Credentials: ",credentials)
       setIsAuthenticated(!!credentials);
     };
 
     checkToken();
   }, [isAuthenticated]);
 
+  console.log("isAuthenticated: ",isAuthenticated)
 if (isAuthenticated === null) {
         return null; // or a SplashScreen
 }
 
 
   return (
+    <SafeAreaProvider>
     <NavigationContainer>
-      <Stack.Navigator initialRouteName={isAuthenticated ? "Profile" : "Login"}>
+      <Stack.Navigator initialRouteName={isAuthenticated ? "Drawer" : "Login"}>
         {isAuthenticated ? (
           <Stack.Screen
-            name="Profile"
-            component={ProfileScreen}
+            name="Drawer"
+            component={DrawerScreen}
             options={{
               headerBackVisible: false,
               gestureEnabled: false,
+              headerShown: false,
             }}
           />
         ) : (
@@ -56,6 +62,7 @@ if (isAuthenticated === null) {
         )}
       </Stack.Navigator>
     </NavigationContainer>
+    </SafeAreaProvider>
   );
 };
 
