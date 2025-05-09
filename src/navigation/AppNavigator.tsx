@@ -13,7 +13,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
-    const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+    // const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+    const isAuthenticated = true;
     const setIsAuthenticated = useAuthStore((state) => state.setIsAuthenticated);
 
   useEffect(() => {
