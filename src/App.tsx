@@ -42,9 +42,8 @@ function App(): React.JSX.Element {
     },
   };
 
-  // const theme = isDarkMode ? DarkTheme : LightTheme;
+  const theme = isDarkMode ? DarkTheme : LightTheme;
 
-  const theme = DarkTheme;
 
   return (
     <PaperProvider theme={theme}>

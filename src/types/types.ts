@@ -8,20 +8,21 @@ export type RootStackParamList = {
   Workspace: { name: string };
   MainStack: { screen?: string };
   Settings: undefined;
+  CreateBoard: undefined;
 };
 
 export type BaseResponse<T> = {
-  message:string;
-  status:number;
-  code:string;
-  data:T;
+  message: string;
+  status: number;
+  code: string;
+  data: T;
 }
 
 export type BaseListResponse<T> = {
-  message:string;
-  status:number;
-  code:string;
-  data:Array<T>;
+  message: string;
+  status: number;
+  code: string;
+  data: Array<T>;
 }
 
 // Navigation Prop type

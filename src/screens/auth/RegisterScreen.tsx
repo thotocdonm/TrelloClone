@@ -4,8 +4,8 @@ import React, { useState } from 'react';
 import { View, Alert, StyleSheet } from 'react-native';
 import { Button, MD3Colors, Text, TextInput } from 'react-native-paper';
 import Icon from '@react-native-vector-icons/fontawesome6';
-import { RootNavigationProp } from '../types/types';
-import authService from '../services/Auth/authService';
+import { RootNavigationProp } from '../../types/types';
+import authService from '../../services/Auth/authService';
 
 
 const RegisterScreen = () => {
@@ -18,12 +18,12 @@ const RegisterScreen = () => {
   const [confirmPassWord, setRePassword] = useState('');
   const navigation = useNavigation<RootNavigationProp<'Register'>>();
 
-  const handleRegister = async (email:string,passWord:string,last_name:string, first_name:string, phone_number:string, username:string,confirmPassWord:string) => {
-      const res = await authService.register(email,passWord,last_name, first_name, phone_number, username,confirmPassWord);
-      if(res && res.code === "SUCCESS"){
-        navigation.navigate('Login');
-      }
+  const handleRegister = async (email: string, passWord: string, last_name: string, first_name: string, phone_number: string, username: string, confirmPassWord: string) => {
+    const res = await authService.register(email, passWord, last_name, first_name, phone_number, username, confirmPassWord);
+    if (res && res.code === "SUCCESS") {
+      navigation.navigate('Login');
     }
+  }
 
   return (
     <View style={styles.container}>
@@ -37,7 +37,7 @@ const RegisterScreen = () => {
       <TextInput style={styles.input} mode='outlined' placeholder="Password" secureTextEntry value={passWord} onChangeText={setPassword} />
       <TextInput style={styles.input} mode='outlined' placeholder="Re-enter Password" secureTextEntry value={confirmPassWord} onChangeText={setRePassword} />
       <Button mode='contained' onPress={() =>
-        handleRegister(email,passWord,last_name, first_name, phone_number, username,confirmPassWord)
+        handleRegister(email, passWord, last_name, first_name, phone_number, username, confirmPassWord)
       }>Register</Button>
     </View>
   );
@@ -45,16 +45,16 @@ const RegisterScreen = () => {
 
 
 const styles = StyleSheet.create({
-  container:{
-    flex:1,
-    justifyContent:'center',
-    alignItems:'center',
-    flexDirection:'column',
-    gap:20
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flexDirection: 'column',
+    gap: 20
   },
-  input:{
-    height:50,
-    width:250
+  input: {
+    height: 50,
+    width: 250
   }
 })
 
