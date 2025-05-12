@@ -1,5 +1,5 @@
 import { useNavigation } from "@react-navigation/native";
-import { StatusBar, StyleSheet, Text, View } from "react-native";
+import { Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { Provider as PaperProvider, Appbar, Button, IconButton, TextInput } from 'react-native-paper';
 import ThemedView from "../../shared/components/ThemedView";
@@ -149,14 +149,17 @@ const WorkspaceScreen = () => {
                         mockWorkspaceBoards && mockWorkspaceBoards.length > 0 &&
                         mockWorkspaceBoards.map(workspace => {
                             return (
-                                <ThemedView key={workspace.id} style={{ display: 'flex', gap: 20, alignItems: 'center', flexDirection: 'row', padding: 10 }}>
-                                    <ThemedView style={{ backgroundColor: workspace.background_color, borderRadius: 3, overflow: 'hidden', width: 60, height: 40 }}>
+                                <Pressable key={workspace.id} onPress={() => navigation.navigate('Board', { id: workspace.id })}>
+                                    <ThemedView key={workspace.id} style={{ display: 'flex', gap: 20, alignItems: 'center', flexDirection: 'row', padding: 10 }}>
+                                        <ThemedView style={{ backgroundColor: workspace.background_color, borderRadius: 3, overflow: 'hidden', width: 60, height: 40 }}>
 
+                                        </ThemedView>
+                                        <ThemedText>
+                                            {workspace.name}
+                                        </ThemedText>
                                     </ThemedView>
-                                    <ThemedText>
-                                        {workspace.name}
-                                    </ThemedText>
-                                </ThemedView>
+                                </Pressable>
+
                             )
                         })
                     }

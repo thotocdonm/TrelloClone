@@ -1,11 +1,12 @@
 import React from 'react';
-import { useColorScheme } from 'react-native';
+import { StyleSheet, useColorScheme } from 'react-native';
 import AppNavigator from './navigation/AppNavigator';
 import {
   DefaultTheme as PaperDefaultTheme,
   MD3DarkTheme as PaperDarkTheme,
   PaperProvider,
 } from 'react-native-paper';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -42,13 +43,21 @@ function App(): React.JSX.Element {
     },
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+  });
+
   const theme = isDarkMode ? DarkTheme : LightTheme;
 
 
   return (
-    <PaperProvider theme={theme}>
-      <AppNavigator />
-    </PaperProvider>
+    <GestureHandlerRootView style={styles.container}>
+      <PaperProvider theme={theme}>
+        <AppNavigator />
+      </PaperProvider>
+    </GestureHandlerRootView>
   );
 }
 

@@ -10,6 +10,7 @@ import * as Keychain from "react-native-keychain";
 import { useAuthStore } from "../store/authStore";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import CreateBoardScreen from "../screens/workspace/CreateBoardScreen";
+import BoardScreen from "../screens/board/BoardScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -52,6 +53,15 @@ const AppNavigator = () => {
               <Stack.Screen
                 name="CreateBoard"
                 component={CreateBoardScreen}
+                options={{
+                  headerBackVisible: false,
+                  gestureEnabled: false,
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="Board"
+                component={BoardScreen}
                 options={{
                   headerBackVisible: false,
                   gestureEnabled: false,

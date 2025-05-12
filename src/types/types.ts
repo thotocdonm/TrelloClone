@@ -9,6 +9,7 @@ export type RootStackParamList = {
   MainStack: { screen?: string };
   Settings: undefined;
   CreateBoard: undefined;
+  Board: { id: number };
 };
 
 export type BaseResponse<T> = {
