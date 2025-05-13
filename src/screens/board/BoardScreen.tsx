@@ -55,6 +55,30 @@ const BoardScreen = () => {
         },
     ];
 
+    const mockCards = [
+        {
+            id: 1,
+            name: 'To Do',
+            created_at: '2025-05-09T14:30:00.000Z',
+            updated_at: '2025-05-09T14:45:00.000Z',
+            is_deleted: false,
+        },
+        {
+            id: 2,
+            name: 'In Progress',
+            created_at: '2025-05-09T15:00:00.000Z',
+            updated_at: '2025-05-09T15:10:00.000Z',
+            is_deleted: false,
+        },
+        {
+            id: 3,
+            name: 'Done',
+            created_at: '2025-05-09T15:30:00.000Z',
+            updated_at: '2025-05-09T15:45:00.000Z',
+            is_deleted: false,
+        },
+    ];
+
 
 
 
@@ -63,7 +87,8 @@ const BoardScreen = () => {
             backgroundColor: mockWorkspaceBoard.background_color,
             overflow: 'hidden',
             width: '100%',
-            height: '100%'
+            // height: '100%',
+            flex: 1
         },
         board: {
             backgroundColor: 'rgba(0, 0, 0, 0.7)',
@@ -96,6 +121,27 @@ const BoardScreen = () => {
             alignItems: 'center',
             borderRadius: 100,
             elevation: 5
+        },
+        list: {
+            backgroundColor: 'rgba(0,0,0,1)',
+            borderRadius: 8,
+            padding: 15,
+            paddingBottom: 70,
+            width: 250,
+            flexShrink: 0,
+            position: 'relative'
+        },
+        card: {
+            backgroundColor: 'rgb(68, 64, 64)',
+            borderRadius: 5,
+            padding: 10,
+            marginTop: 10,
+            width: '100%',
+        },
+        addCardBtn: {
+            position: 'absolute',
+            left: 0,
+            bottom: 10
         }
 
     });
@@ -150,23 +196,28 @@ const BoardScreen = () => {
                 <ThemedView style={[styles.container]}>
                     <ScrollView
                         horizontal
-                        style={{ padding: 10 }}
-                        contentContainerStyle={{ gap: 12 }} // for spacing between lists
+                        contentContainerStyle={{ gap: 12, padding: 10, alignItems: 'flex-start' }} // for spacing between lists
                         showsHorizontalScrollIndicator={false}
                     >
                         {mockLists.map(list => (
                             <View
                                 key={list.id}
-                                style={{
-                                    backgroundColor: 'rgba(1,1,1,0.9)',
-                                    borderRadius: 8,
-                                    padding: 10,
-                                    width: 250,
-                                    height: 400,
-                                }}
+                                style={styles.list}
                             >
                                 <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 8, color: 'white' }}>{list.name}</Text>
-                                {/* You can render cards here in future */}
+                                {
+                                    mockCards.map(card => (
+                                        <View
+                                            key={card.id}
+                                            style={styles.card}
+                                        >
+                                            <Text style={{ fontSize: 12, marginBottom: 8, color: 'white' }}>{card.name}</Text>
+                                        </View>
+                                    ))
+                                }
+                                <Button mode="text" icon="plus" style={styles.addCardBtn}>
+                                    Thêm thẻ
+                                </Button>
                             </View>
                         ))}
                     </ScrollView>

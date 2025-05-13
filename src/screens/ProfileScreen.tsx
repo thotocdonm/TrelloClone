@@ -8,17 +8,17 @@ import { DrawerNavigationProp } from "@react-navigation/drawer";
 
 const ProfileScreen = () => {
     const navigation = useNavigation<DrawerNavigationProp<any>>();
-    const route = useRoute<RootRouteProp<'Profile'>>(); 
+    const route = useRoute<RootRouteProp<'Profile'>>();
     const { name } = route.params || {};
 const setIsAuthenticated = useAuthStore((state) => state.setIsAuthenticated);
 
       const handleLogout = async () => {
         await clearTokens();
-        setIsAuthenticated(false)
-        
+        setIsAuthenticated(false);
+
       }
     return (
-      
+
         <View>
           <Appbar.Header style={{ alignItems: 'center' }}>
                 <Appbar.Action
