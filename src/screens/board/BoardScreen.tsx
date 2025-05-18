@@ -1,10 +1,10 @@
 import { useNavigation } from "@react-navigation/native";
-import { StatusBar, StyleSheet, Text, View } from "react-native";
+import { KeyboardAvoidingView, Platform, StatusBar, StyleSheet, Text, View } from "react-native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { Provider as PaperProvider, Appbar, Button, IconButton, TextInput } from 'react-native-paper';
 import ThemedView from "../../shared/components/ThemedView";
 import ThemedText from "../../shared/components/ThemedText";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RootNavigationProp } from "../../types/types";
 import { ScrollView } from "react-native-gesture-handler";
 
@@ -129,7 +129,7 @@ const BoardScreen = () => {
             paddingBottom: 70,
             width: 250,
             flexShrink: 0,
-            position: 'relative'
+            position: 'relative',
         },
         card: {
             backgroundColor: 'rgb(68, 64, 64)',
@@ -142,7 +142,7 @@ const BoardScreen = () => {
             position: 'absolute',
             left: 0,
             bottom: 10
-        }
+        },
 
     });
 
@@ -151,22 +151,54 @@ const BoardScreen = () => {
 
     const [scale, setScale] = useState(1);
     const [isZoomOut, setIsZoomOut] = useState(false);
+    const [isAddList, setIsAddList] = useState(false);
+    const [listName, setListName] = useState('');
+    const [cardName, setCardName] = useState('');
+    const [addingCardListId, setAddingCardListId] = useState<number | null>(null);
+    const [scrollEnabled, setScrollEnabled] = useState(true);
+    const scrollViewRef = useRef<ScrollView>(null); // Create ref for ScrollView
+    const [scrollOffset, setScrollOffset] = useState(0); // Store scroll position
 
-    const zoomIn = () => {
-        setScale(prev => {
-            const newScale = Math.min(prev + 0.1, 2); // max 2x
-            if (newScale === 2) setIsZoomOut(true); // If zoom is maxed out, show zoom-out button
-            return newScale;
-        });
+    const handleFocus = () => {
+        setScrollEnabled(false);
+        // Save current scroll position
+        //@ts-ignore
+        scrollViewRef.current?.getScrollResponder()?.scrollTo({ x: scrollOffset, animated: false });
     };
 
-    const zoomOut = () => {
-        setScale(prev => {
-            const newScale = Math.max(prev - 0.1, 0.5); // min 0.5x
-            if (newScale === 0.5) setIsZoomOut(false); // If zoom is min, show zoom-in button
-            return newScale;
-        });
+    const handleBlurList = () => {
+        setScrollEnabled(true);
+        setIsAddList(false);
+        setListName('');
     };
+
+    const handleBlurCard = () => {
+        setScrollEnabled(true);
+        setAddingCardListId(null);
+        setCardName('');
+    };
+
+    const handleScroll = (event: any) => {
+        setScrollOffset(event.nativeEvent.contentOffset.x); // Update scroll position on scroll
+    };
+
+    const handleAddList = (data: string) => {
+        if (data.trim()) {
+            console.log("Adding list:", data);
+            setListName('');
+            setIsAddList(false);
+        }
+    };
+
+    const handleAddCard = (data: string, listId: number) => {
+        if (data.trim()) {
+            console.log(`Adding card to list ${listId}:`, data);
+            setCardName('');
+            setAddingCardListId(null);
+        }
+    };
+
+
 
     const darkenColor = (hex: any, amount = 80) => {
         let color = hex.replace('#', '');
@@ -181,63 +213,89 @@ const BoardScreen = () => {
     };
 
 
+
     return (
-        <>
-            <ThemedView style={{ flex: 1 }}>
+        <ThemedView style={{ flex: 1 }}>
+            <Appbar.Header style={{ alignItems: 'center', backgroundColor: darkenColor(mockWorkspaceBoard.background_color) }}>
+                <Appbar.Action icon="arrow-left" onPress={() => navigation.goBack()} />
+                <Appbar.Content title={mockWorkspaceBoard.name} />
+                <Appbar.Action icon="magnify" />
+                <Appbar.Action icon="bell" />
+                <Appbar.Action icon="dots-vertical" />
+            </Appbar.Header>
 
-                <Appbar.Header style={{ alignItems: 'center', backgroundColor: darkenColor(mockWorkspaceBoard.background_color) }}>
-                    <Appbar.Action icon="arrow-left" onPress={() => navigation.goBack()} />
-                    <Appbar.Content title={mockWorkspaceBoard.name} />
-                    <Appbar.Action icon="magnify" />
-                    <Appbar.Action icon="bell" />
-                    <Appbar.Action icon="dots-vertical" />
-                </Appbar.Header>
-
-                <ThemedView style={[styles.container]}>
+            <ThemedView style={[styles.container]}>
+                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
                     <ScrollView
+                        ref={scrollViewRef} // Attach ref
                         horizontal
-                        contentContainerStyle={{ gap: 12, padding: 10, alignItems: 'flex-start' }} // for spacing between lists
+                        contentContainerStyle={{ gap: 12, padding: 10, alignItems: 'flex-start' }}
                         showsHorizontalScrollIndicator={false}
+                        scrollEnabled={scrollEnabled}
+                        onScroll={handleScroll} // Track scroll position
+                        scrollEventThrottle={16} // Optimize scroll event
                     >
                         {mockLists.map(list => (
-                            <View
-                                key={list.id}
-                                style={styles.list}
-                            >
+                            <View key={list.id} style={styles.list}>
                                 <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 8, color: 'white' }}>{list.name}</Text>
-                                {
-                                    mockCards.map(card => (
-                                        <View
-                                            key={card.id}
-                                            style={styles.card}
-                                        >
-                                            <Text style={{ fontSize: 12, marginBottom: 8, color: 'white' }}>{card.name}</Text>
-                                        </View>
-                                    ))
-                                }
-                                <Button mode="text" icon="plus" style={styles.addCardBtn}>
-                                    Thêm thẻ
-                                </Button>
+                                {mockCards.map(card => (
+                                    <View key={card.id} style={styles.card}>
+                                        <Text style={{ fontSize: 12, marginBottom: 8, color: 'white' }}>{card.name}</Text>
+                                    </View>
+                                ))}
+                                {addingCardListId === list.id ? (
+                                    <TextInput
+                                        label="Tên Thẻ"
+                                        mode="flat"
+                                        style={{ backgroundColor: 'transparent' }}
+                                        value={cardName}
+                                        onChangeText={text => setCardName(text)}
+                                        onBlur={handleBlurCard}
+                                        onFocus={handleFocus}
+                                        autoFocus={true}
+                                        onSubmitEditing={() => handleAddCard(cardName, list.id)}
+                                        right={<TextInput.Icon icon="check" onPress={() => handleAddCard(cardName, list.id)} />}
+                                    />
+                                ) : (
+                                    <Button mode="text" icon="plus" style={styles.addCardBtn} onPress={() => setAddingCardListId(list.id)}>
+                                        Thêm thẻ
+                                    </Button>
+                                )}
                             </View>
                         ))}
+
+                        <View style={{ ...styles.list, paddingBottom: 0, padding: 0 }}>
+                            {isAddList ? (
+                                <TextInput
+                                    label="Tên danh sách"
+                                    mode="flat"
+                                    style={{ backgroundColor: 'transparent' }}
+                                    value={listName}
+                                    onChangeText={text => setListName(text)}
+                                    onBlur={handleBlurList}
+                                    onFocus={handleFocus}
+                                    autoFocus={true}
+                                    onSubmitEditing={() => handleAddList(listName)}
+                                    right={<TextInput.Icon icon="check" onPress={() => handleAddList(listName)} />}
+                                />
+                            ) : (
+                                <Button mode="text" icon="plus" onPress={() => setIsAddList(true)}>
+                                    Thêm danh sách
+                                </Button>
+                            )}
+                        </View>
                     </ScrollView>
-                </ThemedView>
-                {
-                    <IconButton
-                        icon={isZoomOut ? "magnify-plus-outline" : "magnify-minus-outline"}
-                        size={35}
-                        mode="contained-tonal"
-                        onPress={isZoomOut ? zoomIn : zoomOut}
-                        style={styles.zoomControls}
-                        iconColor="black"
-                    />
-                }
-
-
+                </KeyboardAvoidingView>
             </ThemedView>
-        </>
-
-    )
+            <IconButton
+                icon={isZoomOut ? 'magnify-plus-outline' : 'magnify-minus-outline'}
+                size={35}
+                mode="contained-tonal"
+                style={styles.zoomControls}
+                iconColor="black"
+            />
+        </ThemedView>
+    );
 };
 
 export default BoardScreen;

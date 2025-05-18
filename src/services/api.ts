@@ -4,7 +4,7 @@ import { getAccessToken } from './Auth/tokenService';
 
 
 const api = axios.create({
-  baseURL: process.env.BASE_URL,
+  baseURL: process.env.BASE_URL_MOBILE,
 });
 
 api.interceptors.request.use(

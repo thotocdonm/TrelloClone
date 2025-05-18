@@ -1,11 +1,13 @@
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
-import { View, Alert, StyleSheet } from 'react-native';
-import { Button, MD3Colors, Text, TextInput } from 'react-native-paper';
+import { Alert, StyleSheet } from 'react-native';
+import { Button, MD3Colors, TextInput } from 'react-native-paper';
 import Icon from '@react-native-vector-icons/fontawesome6';
 import { RootNavigationProp } from '../../types/types';
 import authService from '../../services/Auth/authService';
+import ThemedView from '../../shared/components/ThemedView';
+import ThemedText from '../../shared/components/ThemedText';
 
 
 const RegisterScreen = () => {
@@ -26,9 +28,9 @@ const RegisterScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <ThemedView style={styles.container}>
       <Icon name="trello" size={50} color="#0079BF" iconStyle='brand' />
-      <Text variant='headlineLarge'>Register</Text>
+      <ThemedText style={{ fontSize: 25, fontWeight: 'bold' }}>Register</ThemedText>
       <TextInput style={styles.input} mode='outlined' placeholder="Email" value={email} onChangeText={setEmail} />
       <TextInput style={styles.input} mode='outlined' placeholder="Username" value={username} onChangeText={setUsername} />
       <TextInput style={styles.input} mode='outlined' placeholder="Phone number" value={phone_number} onChangeText={setPhoneNumber} />
@@ -39,7 +41,7 @@ const RegisterScreen = () => {
       <Button mode='contained' onPress={() =>
         handleRegister(email, passWord, last_name, first_name, phone_number, username, confirmPassWord)
       }>Register</Button>
-    </View>
+    </ThemedView>
   );
 };
 
