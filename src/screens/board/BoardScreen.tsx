@@ -1,5 +1,5 @@
 import { useNavigation } from "@react-navigation/native";
-import { StatusBar, StyleSheet, Text, View } from "react-native";
+import { StatusBar, StyleSheet, Text, View,Pressable } from "react-native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { Provider as PaperProvider, Appbar, Button, IconButton, TextInput } from 'react-native-paper';
 import ThemedView from "../../shared/components/ThemedView";
@@ -179,7 +179,9 @@ const BoardScreen = () => {
         let b = Math.max((num & 0x0000FF) - amount, 0);
         return `rgb(${r}, ${g}, ${b})`;
     };
-
+    const handlePress = (cardName:string) =>{
+        navigation.navigate("CardDetail",{name:cardName});
+    }
 
     return (
         <>
@@ -207,12 +209,14 @@ const BoardScreen = () => {
                                 <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 8, color: 'white' }}>{list.name}</Text>
                                 {
                                     mockCards.map(card => (
-                                        <View
-                                            key={card.id}
-                                            style={styles.card}
-                                        >
-                                            <Text style={{ fontSize: 12, marginBottom: 8, color: 'white' }}>{card.name}</Text>
-                                        </View>
+                                        <Pressable key={card.id} onPress={()=>handlePress(card.name)}>
+                                            <View
+                                                
+                                                style={styles.card}
+                                            >
+                                                <Text style={{ fontSize: 12, marginBottom: 8, color: 'white' }}>{card.name}</Text>
+                                            </View>
+                                        </Pressable>
                                     ))
                                 }
                                 <Button mode="text" icon="plus" style={styles.addCardBtn}>

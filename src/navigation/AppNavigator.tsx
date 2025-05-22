@@ -11,6 +11,7 @@ import { useAuthStore } from "../store/authStore";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import CreateBoardScreen from "../screens/workspace/CreateBoardScreen";
 import BoardScreen from "../screens/board/BoardScreen";
+import CardDetailScreen from "../screens/card/CardDetailScreen"
 
 const Stack = createNativeStackNavigator();
 
@@ -66,6 +67,16 @@ const AppNavigator = () => {
                   headerBackVisible: false,
                   gestureEnabled: false,
                   headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="CardDetail"
+                component={CardDetailScreen}
+                options={{
+                  headerBackVisible: false,
+                  gestureEnabled: false,
+                  headerShown: false,
+                  
                 }}
               />
             </>

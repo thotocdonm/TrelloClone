@@ -10,7 +10,7 @@ export type RootStackParamList = {
   Settings: undefined;
   CreateBoard: undefined;
   Board: { id: number };
-  CardDetail:{name: string};
+  CardDetail: {name:string}
 };
 
 export type BaseResponse<T> = {
