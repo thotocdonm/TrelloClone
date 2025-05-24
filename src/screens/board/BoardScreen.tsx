@@ -211,7 +211,9 @@ const BoardScreen = () => {
         let b = Math.max((num & 0x0000FF) - amount, 0);
         return `rgb(${r}, ${g}, ${b})`;
     };
-
+    const handlePress = (cardName:string) =>{
+        navigation.navigate("CardDetail",{name:cardName});
+    }
 
 
     return (
@@ -235,9 +237,6 @@ const BoardScreen = () => {
                         onScroll={handleScroll} // Track scroll position
                         scrollEventThrottle={16} // Optimize scroll event
                     >
-                        {mockLists.map(list => (
-                            <View key={list.id} style={styles.list}>
-                                <Text style={{ fontWeight: 'bold', fontSize: 16, marginBottom: 8, color: 'white' }}>{list.name}</Text>
                                 {mockCards.map(card => (
                                     <View key={card.id} style={styles.card}>
                                         <Text style={{ fontSize: 12, marginBottom: 8, color: 'white' }}>{card.name}</Text>
