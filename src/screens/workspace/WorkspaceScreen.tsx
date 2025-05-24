@@ -1,11 +1,13 @@
 import { useNavigation } from "@react-navigation/native";
 import { Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
-import { Provider as PaperProvider, Appbar, Button, IconButton, TextInput } from 'react-native-paper';
+import { Provider as PaperProvider, Appbar, Button, IconButton, TextInput, Portal, Modal } from 'react-native-paper';
 import ThemedView from "../../shared/components/ThemedView";
 import ThemedText from "../../shared/components/ThemedText";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RootNavigationProp } from "../../types/types";
+import { Dropdown } from "react-native-paper-dropdown";
+import workspaceService from "../../services/Workspace/workspaceService";
 
 const WorkspaceScreen = () => {
     const drawerNavigation = useNavigation<DrawerNavigationProp<any>>();
@@ -80,10 +82,38 @@ const WorkspaceScreen = () => {
             alignItems: 'center',
             borderRadius: 16
         },
+        modal: {
+            backgroundColor: 'rgb(0, 0, 0)',
+            paddingHorizontal: 20,
+            width: '80%',
+            alignSelf: 'center', // Centers horizontally
+            marginTop: 'auto', // Centers vertically with marginBottom
+            marginBottom: 'auto',
+        }
 
     });
 
     const [cardContent, setCardContent] = useState('');
+    const [isBoardVisible, setIsBoardVisible] = useState(false);
+    const [listBoard, setListBoard] = useState([]);
+    const [listList, setListList] = useState([]);
+
+    const [boardName, setBoardName] = useState<string | undefined>('');
+    const [listName, setListName] = useState<string | undefined>('');
+    const showModal = () => setIsBoardVisible(true);
+    const hideModal = () => setIsBoardVisible(false);
+
+    useEffect(() => {
+
+    }, [])
+
+    // const handleGetBoardList = async () => {
+    //     const res = await workspaceService.getList();
+    //     if (res && res.code === "SUCCESS") {
+    //         setListBoard(res.data)
+    //     }
+    // }
+
 
     return (
         <>
@@ -117,7 +147,7 @@ const WorkspaceScreen = () => {
                                 <IconButton
                                     icon='pencil'
                                     size={24}
-                                    onPress={() => console.log('Pressed')}
+                                    onPress={showModal}
                                     accessibilityLabel="Avatar button"
                                 />
                             </View>
@@ -129,7 +159,7 @@ const WorkspaceScreen = () => {
                                     value={cardContent}
                                     onChangeText={setCardContent}
                                     right={
-                                        cardContent ? <TextInput.Icon icon="check" onPress={() => console.log('check clicked')} /> : null
+                                        cardContent ? <TextInput.Icon icon="check" color='green' onPress={() => console.log('check clicked')} /> : null
                                     }
                                 >
 
@@ -169,6 +199,54 @@ const WorkspaceScreen = () => {
                     Tạo bảng
                 </Button>
             </ThemedView>
+
+            <Portal>
+                <Modal visible={isBoardVisible} onDismiss={hideModal} contentContainerStyle={styles.modal} theme={{ colors: { primary: '#0079BF' } }}>
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            borderBottomWidth: 1,
+                            borderBottomColor: '#ccc',
+                        }}
+                    >
+                        <IconButton
+                            icon="close"
+                            size={24}
+                            onPress={hideModal}
+                            accessibilityLabel="Close modal"
+                        />
+                        <Text style={{ fontSize: 18, fontWeight: 'bold', color: 'white' }}>Thay đổi vị trí</Text>
+                        <IconButton
+                            icon="check"
+                            size={24}
+                            onPress={() => console.log('V button clicked')}
+                            accessibilityLabel="Confirm action"
+                        />
+                    </View>
+                    <View style={{ paddingVertical: 20, display: 'flex', flexDirection: 'column', gap: 20 }}>
+                        <Dropdown
+                            mode="flat"
+                            label="Đến"
+                            placeholder="Bảng"
+                            options={OPTIONS}
+                            value={boardName}
+                            onSelect={setBoardName}
+                            hideMenuHeader={true}
+                        />
+                        <Dropdown
+                            mode="flat"
+                            label="Danh sách"
+                            placeholder="Danh sách"
+                            options={OPTIONS}
+                            value={listName}
+                            onSelect={setListName}
+                            hideMenuHeader={true}
+                        />
+                    </View>
+                </Modal>
+            </Portal>
         </>
 
     )
