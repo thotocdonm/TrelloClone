@@ -1,4 +1,4 @@
-import { BaseResponse } from "../types/types";
+import { BaseListResponse, BaseResponse } from "../types/types";
 import api from "./api";
 
 class BaseService<T> {
@@ -14,7 +14,7 @@ class BaseService<T> {
         return `/${this.urlVersion}/${this.urlEndPoint}${path}${urlAfter}`;
     }
 
-    async getList(path: string = '/getAll', urlAfter: string = '', params?: Record<string, any>): Promise<BaseResponse<T>> {
+    async getList(path: string = '/getAll', urlAfter: string = '', params?: Record<string, any>): Promise<BaseListResponse<T>> {
         try {
             const url = this.getUrl(path, urlAfter);
             const response = await api.get(url, { params });
@@ -43,6 +43,17 @@ class BaseService<T> {
             return response.data;
         } catch (error: any) {
             const message = error.response?.data?.message || 'Failed to update item';
+            throw new Error(message);
+        }
+    }
+
+    async getById(id: number | string, path: string = '/get', urlAfter: string = ''): Promise<BaseResponse<T>> {
+        try {
+            const url = this.getUrl(`${path}/${id}`, urlAfter);
+            const response = await api.get(url);
+            return response.data;
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Failed to get item';
             throw new Error(message);
         }
     }

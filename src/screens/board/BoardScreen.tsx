@@ -1,12 +1,16 @@
 import { useNavigation } from "@react-navigation/native";
-import { KeyboardAvoidingView, Platform, StatusBar, StyleSheet, Text, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
-import { Provider as PaperProvider, Appbar, Button, IconButton, TextInput } from 'react-native-paper';
+import { Provider as PaperProvider, Appbar, Button, IconButton, TextInput, Icon } from 'react-native-paper';
 import ThemedView from "../../shared/components/ThemedView";
 import ThemedText from "../../shared/components/ThemedText";
 import { useEffect, useRef, useState } from "react";
 import { RootNavigationProp } from "../../types/types";
 import { ScrollView } from "react-native-gesture-handler";
+import boardService from "../../services/Board/boardService";
+import { BoardResponse } from "../../types/auth.type";
+import cardService from "../../services/Board/cardService";
+import listService from "../../services/Board/listService";
 
 const BoardScreen = () => {
     const drawerNavigation = useNavigation<DrawerNavigationProp<any>>();
@@ -147,7 +151,7 @@ const BoardScreen = () => {
     });
 
     const [cardContent, setCardContent] = useState('');
-
+    const [currentBoard, setCurrentBoard] = useState<BoardResponse | null>(null);
 
     const [scale, setScale] = useState(1);
     const [isZoomOut, setIsZoomOut] = useState(false);
@@ -174,7 +178,9 @@ const BoardScreen = () => {
 
     const handleBlurCard = () => {
         setScrollEnabled(true);
-        setAddingCardListId(null);
+        setTimeout(() => {
+            setAddingCardListId(null);
+        }, 500);
         setCardName('');
     };
 
@@ -182,23 +188,35 @@ const BoardScreen = () => {
         setScrollOffset(event.nativeEvent.contentOffset.x); // Update scroll position on scroll
     };
 
-    const handleAddList = (data: string) => {
-        if (data.trim()) {
-            console.log("Adding list:", data);
+    const handleAddList = (data: string, boardId: number) => {
+
+        try {
+            const res = listService.create({ name: listName, board: boardId })
+            console.log(res);
             setListName('');
             setIsAddList(false);
+            getBoardData();
+        } catch (error) {
+            console.error('Error adding list data:', error);
         }
+
+
     };
 
     const handleAddCard = (data: string, listId: number) => {
-        if (data.trim()) {
-            console.log(`Adding card to list ${listId}:`, data);
+
+        try {
+            const res = cardService.create({ name: cardName, listCard: listId })
+            console.log(data, listId)
             setCardName('');
             setAddingCardListId(null);
+            getBoardData();
+        } catch (error) {
+            console.error('Error adding card data:', error);
         }
+
+
     };
-
-
 
     const darkenColor = (hex: any, amount = 80) => {
         let color = hex.replace('#', '');
@@ -215,98 +233,140 @@ const BoardScreen = () => {
         navigation.navigate("CardDetail", { name: cardName });
     }
 
+    const getBoardData = async () => {
+        try {
+            const res = await boardService.getById(1);
+            if (res) {
+                //@ts-ignore
+                setCurrentBoard(res);
+            }
+
+        } catch (error) {
+            console.error('Error fetching board data:', error);
+        }
+
+    }
+
+    useEffect(() => {
+        getBoardData();
+    }, [])
+
+    useEffect(() => {
+        console.log(currentBoard)
+    }, [currentBoard])
 
     return (
-        <ThemedView style={{ flex: 1 }}>
-            <Appbar.Header style={{ alignItems: 'center', backgroundColor: darkenColor(mockWorkspaceBoard.background_color) }}>
-                <Appbar.Action icon="arrow-left" onPress={() => navigation.goBack()} />
-                <Appbar.Content title={mockWorkspaceBoard.name} />
-                <Appbar.Action icon="magnify" />
-                <Appbar.Action icon="bell" />
-                <Appbar.Action icon="dots-vertical" />
-            </Appbar.Header>
+        <>
+            {currentBoard ? (
+                <ThemedView style={{ flex: 1 }}>
+                    <Appbar.Header style={{ alignItems: 'center', backgroundColor: darkenColor(currentBoard?.background_color) }}>
+                        <Appbar.Action icon="arrow-left" onPress={() => navigation.goBack()} />
+                        <Appbar.Content title={currentBoard?.name} />
+                        <Appbar.Action icon="magnify" />
+                        <Appbar.Action icon="bell" />
+                        <Appbar.Action icon="dots-vertical" />
+                    </Appbar.Header>
 
-            <ThemedView style={[styles.container]}>
-                <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-                    <ScrollView
-                        ref={scrollViewRef}
-                        horizontal
-                        contentContainerStyle={{ gap: 12, padding: 10, alignItems: 'flex-start' }}
-                        showsHorizontalScrollIndicator={false}
-                        scrollEnabled={scrollEnabled}
-                        onScroll={handleScroll}
-                        scrollEventThrottle={16}
-                    >
-                        {mockLists.map(list => (
-                            <View key={list.id} style={styles.list}>
-                                <Text style={{ fontWeight: 'bold', fontSize: 14, color: 'white' }}>{list.name}</Text>
+                    <ThemedView style={[styles.container]}>
+                        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+                            <ScrollView
+                                ref={scrollViewRef}
+                                horizontal
+                                contentContainerStyle={{ gap: 12, padding: 10, alignItems: 'flex-start' }}
+                                showsHorizontalScrollIndicator={false}
+                                scrollEnabled={scrollEnabled}
+                                onScroll={handleScroll}
+                                scrollEventThrottle={16}
+                            >
+                                {currentBoard?.boardlists.map(list => (
+                                    <View key={list.id} style={styles.list}>
+                                        <Text style={{ fontWeight: 'bold', fontSize: 14, color: 'white' }}>{list.name}</Text>
 
-                                {/* Cards inside this list */}
-                                {mockCards.map(card => (
-                                    <View key={card.id} style={styles.card}>
-                                        <Text
-                                            style={{ fontSize: 12, marginBottom: 8, color: 'white' }}
-                                            onPress={() => handlePress(card.name)}
-                                        >
-                                            {card.name}
-                                        </Text>
+                                        {/* Cards inside this list */}
+                                        {list.listcard.map(card => (
+                                            <View key={card.id} style={styles.card}>
+                                                <Text
+                                                    style={{ fontSize: 12, marginBottom: 8, color: 'white' }}
+                                                    onPress={() => handlePress(card.name)}
+                                                >
+                                                    {card.name}
+                                                </Text>
+                                            </View>
+                                        ))}
+
+                                        {/* Add Card Input */}
+                                        {addingCardListId === list.id ? (
+                                            <View style={{ position: 'relative' }}>
+                                                <TextInput
+                                                    label="Tên Thẻ"
+                                                    mode="flat"
+                                                    style={{ backgroundColor: 'transparent' }}
+                                                    value={cardName}
+                                                    onChangeText={setCardName}
+                                                    onBlur={handleBlurCard}
+                                                    onFocus={handleFocus}
+                                                    autoFocus={true}
+                                                    onSubmitEditing={() => handleAddCard(cardName, list.id)}
+                                                />
+                                                <Pressable
+                                                    onPress={() => handleAddCard(cardName, list.id)}
+                                                    style={{
+                                                        position: 'absolute',
+                                                        right: 10,
+                                                        top: 20, // Adjust depending on font size
+                                                        zIndex: 1,
+                                                    }}
+                                                >
+                                                    <Icon source="check" size={24} color="#2196f3" />
+                                                </Pressable>
+                                            </View>
+
+                                        ) : (
+                                            <Button mode="text" icon="plus" style={styles.addCardBtn} onPress={() => setAddingCardListId(list.id)}>
+                                                Thêm thẻ
+                                            </Button>
+                                        )}
                                     </View>
                                 ))}
 
-                                {/* Add Card Input */}
-                                {addingCardListId === list.id ? (
-                                    <TextInput
-                                        label="Tên Thẻ"
-                                        mode="flat"
-                                        style={{ backgroundColor: 'transparent' }}
-                                        value={cardName}
-                                        onChangeText={setCardName}
-                                        onBlur={handleBlurCard}
-                                        onFocus={handleFocus}
-                                        autoFocus={true}
-                                        onSubmitEditing={() => handleAddCard(cardName, list.id)}
-                                        right={<TextInput.Icon icon="check" onPress={() => handleAddCard(cardName, list.id)} />}
-                                    />
-                                ) : (
-                                    <Button mode="text" icon="plus" style={styles.addCardBtn} onPress={() => setAddingCardListId(list.id)}>
-                                        Thêm thẻ
-                                    </Button>
-                                )}
-                            </View>
-                        ))}
-
-                        {/* Add List Button or Input */}
-                        <View style={{ ...styles.list, paddingBottom: 0, padding: 0 }}>
-                            {isAddList ? (
-                                <TextInput
-                                    label="Tên danh sách"
-                                    mode="flat"
-                                    style={{ backgroundColor: 'transparent' }}
-                                    value={listName}
-                                    onChangeText={setListName}
-                                    onBlur={handleBlurList}
-                                    onFocus={handleFocus}
-                                    autoFocus={true}
-                                    onSubmitEditing={() => handleAddList(listName)}
-                                    right={<TextInput.Icon icon="check" onPress={() => handleAddList(listName)} />}
-                                />
-                            ) : (
-                                <Button mode="text" icon="plus" onPress={() => setIsAddList(true)}>
-                                    Thêm danh sách
-                                </Button>
-                            )}
-                        </View>
-                    </ScrollView>
-                </KeyboardAvoidingView>
-            </ThemedView>
-            <IconButton
-                icon={isZoomOut ? 'magnify-plus-outline' : 'magnify-minus-outline'}
-                size={35}
-                mode="contained-tonal"
-                style={styles.zoomControls}
-                iconColor="black"
-            />
-        </ThemedView>
+                                {/* Add List Button or Input */}
+                                <View style={{ ...styles.list, paddingBottom: 0, padding: 0 }}>
+                                    {isAddList ? (
+                                        <TextInput
+                                            label="Tên danh sách"
+                                            mode="flat"
+                                            style={{ backgroundColor: 'transparent' }}
+                                            value={listName}
+                                            onChangeText={setListName}
+                                            onBlur={handleBlurList}
+                                            onFocus={handleFocus}
+                                            autoFocus={true}
+                                            onSubmitEditing={() => handleAddList(listName, currentBoard?.id)}
+                                            right={<TextInput.Icon icon="check" onPress={() => handleAddList(listName, currentBoard?.id)} />}
+                                        />
+                                    ) : (
+                                        <Button mode="text" icon="plus" onPress={() => setIsAddList(true)}>
+                                            Thêm danh sách
+                                        </Button>
+                                    )}
+                                </View>
+                            </ScrollView>
+                        </KeyboardAvoidingView>
+                    </ThemedView>
+                    <IconButton
+                        icon={isZoomOut ? 'magnify-plus-outline' : 'magnify-minus-outline'}
+                        size={35}
+                        mode="contained-tonal"
+                        style={styles.zoomControls}
+                        iconColor="black"
+                    />
+                </ThemedView>
+            ) : (
+                <View>
+                    <Text>Loading board...</Text>
+                </View>
+            )}
+        </>
     );
 };
 

@@ -1,5 +1,5 @@
 import { useNavigation } from "@react-navigation/native";
-import { Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { Provider as PaperProvider, Appbar, Button, IconButton, TextInput, Portal, Modal } from 'react-native-paper';
 import ThemedView from "../../shared/components/ThemedView";
@@ -10,6 +10,8 @@ import { Dropdown } from "react-native-paper-dropdown";
 import workspaceService from "../../services/Workspace/workspaceService";
 import listService from "../../services/Board/listService";
 import boardService from "../../services/Board/boardService";
+import cardService from "../../services/Board/cardService";
+import Toast from "react-native-toast-message";
 
 const WorkspaceScreen = () => {
     const drawerNavigation = useNavigation<DrawerNavigationProp<any>>();
@@ -100,29 +102,69 @@ const WorkspaceScreen = () => {
     const [listBoard, setListBoard] = useState<any>([]);
     const [listList, setListList] = useState<any>([]);
 
-    const [boardName, setBoardName] = useState<string | undefined>('');
-    const [listName, setListName] = useState<string | undefined>('');
+    const [boardId, setBoardId] = useState<string | undefined>(undefined);
+    const [listId, setListId] = useState<string | undefined>(undefined);
     const showModal = () => setIsBoardVisible(true);
     const hideModal = () => setIsBoardVisible(false);
 
     useEffect(() => {
-
+        handleGetBoardList();
     }, [])
 
+    useEffect(() => {
+        handleGetListList(boardId);
+    }, [boardId])
+
+
+    const handleOnSelectBoard = (id: any) => {
+        setListId(undefined);
+        setBoardId(id);
+    }
 
     const handleGetBoardList = async () => {
-        const res = await boardService.getList('/getAll', '', {});
+        const res = await boardService.getList('/get', '', { workspaceId: 8 });
         if (res && res.code === "SUCCESS") {
-            setListBoard(res.data)
+            const boardOptions = res.data.map((board: any) => ({
+                label: board.name,
+                value: board.id,
+            }));
+            setListBoard(boardOptions)
+            console.log(boardOptions)
         }
     }
 
     const handleGetListList = async (boardId: any) => {
-        const res = await listService.getList();
+        const res = await listService.getList('/get', '', { boardId: boardId });
         if (res && res.code === "SUCCESS") {
-            setListList(res.data)
+            const listOptions = res.data.map((list: any) => ({
+                label: list.name,
+                value: list.id,
+            }));
+            setListList(listOptions)
         }
     }
+
+    const handleAddCardShortcut = async () => {
+        if (listId !== undefined) {
+            try {
+                const res = await cardService.create({ name: cardContent, listCard: listId });
+
+                if (res && res.code === "SUCCESS") {
+                    Alert.alert('Thành công', res.message || 'Thẻ đã được thêm.');
+                    // Optionally reset input
+                    setCardContent('');
+                } else {
+                    Alert.alert('Lỗi', res.message || 'Thêm thẻ thất bại.');
+                }
+
+            } catch (error) {
+                console.error(error);
+                Alert.alert('Lỗi', 'Có lỗi xảy ra khi thêm thẻ.');
+            }
+        } else {
+            Alert.alert('Lỗi', 'Hãy chọn bảng và danh sách trước');
+        }
+    };
 
 
 
@@ -147,10 +189,10 @@ const WorkspaceScreen = () => {
                             <View style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', alignItems: 'flex-start' }}>
                                 <View>
                                     <ThemedText style={{ fontWeight: 'bold' }}>
-                                        Board name
+                                        {listBoard.find((item: any) => item.value === boardId)?.label || "Board name"}
                                     </ThemedText>
                                     <ThemedText>
-                                        Card name
+                                        {listList.find((item: any) => item.value === listId)?.label || "List name"}
                                     </ThemedText>
                                 </View>
 
@@ -170,7 +212,7 @@ const WorkspaceScreen = () => {
                                     value={cardContent}
                                     onChangeText={setCardContent}
                                     right={
-                                        cardContent ? <TextInput.Icon icon="check" color='green' onPress={() => console.log('check clicked')} /> : null
+                                        cardContent ? <TextInput.Icon icon="check" color='green' onPress={() => handleAddCardShortcut()} /> : null
                                     }
                                 >
 
@@ -232,7 +274,7 @@ const WorkspaceScreen = () => {
                         <IconButton
                             icon="check"
                             size={24}
-                            onPress={() => console.log('V button clicked')}
+                            onPress={hideModal}
                             accessibilityLabel="Confirm action"
                         />
                     </View>
@@ -242,8 +284,8 @@ const WorkspaceScreen = () => {
                             label="Đến"
                             placeholder="Bảng"
                             options={listBoard}
-                            value={boardName}
-                            onSelect={setBoardName}
+                            value={boardId}
+                            onSelect={(id) => (handleOnSelectBoard(id))}
                             hideMenuHeader={true}
                         />
                         <Dropdown
@@ -251,8 +293,8 @@ const WorkspaceScreen = () => {
                             label="Danh sách"
                             placeholder="Danh sách"
                             options={listList}
-                            value={listName}
-                            onSelect={setListName}
+                            value={listId}
+                            onSelect={setListId}
                             hideMenuHeader={true}
                         />
                     </View>

@@ -20,3 +20,31 @@ export type WorkspaceResponse = {
     };
     role: string;
 };
+
+type Task = any; // Replace with actual task type if known
+
+interface Card {
+    id: number;
+    name: string;
+    description: string | null;
+    file: string | null;
+    label: string | null;
+    start_date: string | null;
+    end_date: string | null;
+    list: number;
+    tasks: Task | null;
+}
+
+interface List {
+    id: number;
+    name: string;
+    board: number;
+    listcard: Card[];
+}
+
+export interface BoardResponse {
+    id: number;
+    name: string;
+    background_color: string;
+    boardlists: List[];
+}

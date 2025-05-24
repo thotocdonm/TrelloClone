@@ -3,11 +3,11 @@ import { BaseResponse } from "../../types/types";
 import api from "../api";
 import BaseService from "../BaseService";
 
-class BoardService extends BaseService<BoardResponse> {
+class CardService extends BaseService<any> {
     constructor() {
-        super('board');
+        super('card');
     }
 
 }
 
-export default new BoardService()
+export default new CardService()
