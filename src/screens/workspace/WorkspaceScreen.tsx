@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 import { RootNavigationProp } from "../../types/types";
 import { Dropdown } from "react-native-paper-dropdown";
 import workspaceService from "../../services/Workspace/workspaceService";
+import listService from "../../services/Board/listService";
+import boardService from "../../services/Board/boardService";
 
 const WorkspaceScreen = () => {
     const drawerNavigation = useNavigation<DrawerNavigationProp<any>>();
@@ -95,8 +97,8 @@ const WorkspaceScreen = () => {
 
     const [cardContent, setCardContent] = useState('');
     const [isBoardVisible, setIsBoardVisible] = useState(false);
-    const [listBoard, setListBoard] = useState([]);
-    const [listList, setListList] = useState([]);
+    const [listBoard, setListBoard] = useState<any>([]);
+    const [listList, setListList] = useState<any>([]);
 
     const [boardName, setBoardName] = useState<string | undefined>('');
     const [listName, setListName] = useState<string | undefined>('');
@@ -107,12 +109,21 @@ const WorkspaceScreen = () => {
 
     }, [])
 
-    // const handleGetBoardList = async () => {
-    //     const res = await workspaceService.getList();
-    //     if (res && res.code === "SUCCESS") {
-    //         setListBoard(res.data)
-    //     }
-    // }
+
+    const handleGetBoardList = async () => {
+        const res = await boardService.getList('/getAll', '', {});
+        if (res && res.code === "SUCCESS") {
+            setListBoard(res.data)
+        }
+    }
+
+    const handleGetListList = async (boardId: any) => {
+        const res = await listService.getList();
+        if (res && res.code === "SUCCESS") {
+            setListList(res.data)
+        }
+    }
+
 
 
     return (
@@ -230,7 +241,7 @@ const WorkspaceScreen = () => {
                             mode="flat"
                             label="Đến"
                             placeholder="Bảng"
-                            options={OPTIONS}
+                            options={listBoard}
                             value={boardName}
                             onSelect={setBoardName}
                             hideMenuHeader={true}
@@ -239,7 +250,7 @@ const WorkspaceScreen = () => {
                             mode="flat"
                             label="Danh sách"
                             placeholder="Danh sách"
-                            options={OPTIONS}
+                            options={listList}
                             value={listName}
                             onSelect={setListName}
                             hideMenuHeader={true}

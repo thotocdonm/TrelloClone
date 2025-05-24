@@ -211,8 +211,8 @@ const BoardScreen = () => {
         let b = Math.max((num & 0x0000FF) - amount, 0);
         return `rgb(${r}, ${g}, ${b})`;
     };
-    const handlePress = (cardName:string) =>{
-        navigation.navigate("CardDetail",{name:cardName});
+    const handlePress = (cardName: string) => {
+        navigation.navigate("CardDetail", { name: cardName });
     }
 
 
@@ -229,26 +229,38 @@ const BoardScreen = () => {
             <ThemedView style={[styles.container]}>
                 <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
                     <ScrollView
-                        ref={scrollViewRef} // Attach ref
+                        ref={scrollViewRef}
                         horizontal
                         contentContainerStyle={{ gap: 12, padding: 10, alignItems: 'flex-start' }}
                         showsHorizontalScrollIndicator={false}
                         scrollEnabled={scrollEnabled}
-                        onScroll={handleScroll} // Track scroll position
-                        scrollEventThrottle={16} // Optimize scroll event
+                        onScroll={handleScroll}
+                        scrollEventThrottle={16}
                     >
+                        {mockLists.map(list => (
+                            <View key={list.id} style={styles.list}>
+                                <Text style={{ fontWeight: 'bold', fontSize: 14, color: 'white' }}>{list.name}</Text>
+
+                                {/* Cards inside this list */}
                                 {mockCards.map(card => (
                                     <View key={card.id} style={styles.card}>
-                                        <Text style={{ fontSize: 12, marginBottom: 8, color: 'white' }}>{card.name}</Text>
+                                        <Text
+                                            style={{ fontSize: 12, marginBottom: 8, color: 'white' }}
+                                            onPress={() => handlePress(card.name)}
+                                        >
+                                            {card.name}
+                                        </Text>
                                     </View>
                                 ))}
+
+                                {/* Add Card Input */}
                                 {addingCardListId === list.id ? (
                                     <TextInput
                                         label="Tên Thẻ"
                                         mode="flat"
                                         style={{ backgroundColor: 'transparent' }}
                                         value={cardName}
-                                        onChangeText={text => setCardName(text)}
+                                        onChangeText={setCardName}
                                         onBlur={handleBlurCard}
                                         onFocus={handleFocus}
                                         autoFocus={true}
@@ -263,6 +275,7 @@ const BoardScreen = () => {
                             </View>
                         ))}
 
+                        {/* Add List Button or Input */}
                         <View style={{ ...styles.list, paddingBottom: 0, padding: 0 }}>
                             {isAddList ? (
                                 <TextInput
@@ -270,7 +283,7 @@ const BoardScreen = () => {
                                     mode="flat"
                                     style={{ backgroundColor: 'transparent' }}
                                     value={listName}
-                                    onChangeText={text => setListName(text)}
+                                    onChangeText={setListName}
                                     onBlur={handleBlurList}
                                     onFocus={handleFocus}
                                     autoFocus={true}

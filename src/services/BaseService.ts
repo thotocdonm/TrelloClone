@@ -14,10 +14,10 @@ class BaseService<T> {
         return `/${this.urlVersion}/${this.urlEndPoint}${path}${urlAfter}`;
     }
 
-    async getList(path: string = '/getAll', urlAfter: string = ''): Promise<BaseResponse<T>> {
+    async getList(path: string = '/getAll', urlAfter: string = '', params?: Record<string, any>): Promise<BaseResponse<T>> {
         try {
             const url = this.getUrl(path, urlAfter);
-            const response = await api.get(url);
+            const response = await api.get(url, { params });
             return response.data;
         } catch (error: any) {
             const message = error.response?.data?.message || 'Failed to fetch list';
