@@ -355,8 +355,33 @@ const BoardScreen = () => {
                                                             <Text style={{ fontSize: 12, marginBottom: 8, color: 'white' }}>
                                                                 {item.name}
                                                             </Text>
+
+                                                            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                                                                {item.description && (
+                                                                    <Icon source="file-document-outline" size={16} color="white" />
+                                                                )}
+
+                                                                {(item.start_date || item.end_date) && (
+                                                                    <>
+                                                                        <Icon source="calendar-range" size={16} color="white" />
+                                                                        <Text style={{ fontSize: 10, color: 'white' }}>
+                                                                            {(item.start_date ?? '...')} - {(item.end_date ?? '...')}
+                                                                        </Text>
+                                                                    </>
+                                                                )}
+
+                                                                {Array.isArray(item.tasks) && item.tasks.length > 0 && (
+                                                                    <>
+                                                                        <Icon source="check-circle-outline" size={16} color="white" />
+                                                                        <Text style={{ fontSize: 10, color: 'white' }}>
+                                                                            {item.tasks.filter(task => task.completed).length}/{item.tasks.length}
+                                                                        </Text>
+                                                                    </>
+                                                                )}
+                                                            </View>
                                                         </Pressable>
                                                     </Animated.View>
+
                                                 );
                                             }}
                                             containerStyle={{ width: '100%' }}
