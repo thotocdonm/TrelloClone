@@ -102,6 +102,8 @@ const WorkspaceScreen = () => {
     const [listBoard, setListBoard] = useState<any>([]);
     const [listList, setListList] = useState<any>([]);
 
+    const [workspaceInfo, setWorkspaceInfor] = useState<any>({});
+
     const [boardId, setBoardId] = useState<string | undefined>(undefined);
     const [listId, setListId] = useState<string | undefined>(undefined);
     const showModal = () => setIsBoardVisible(true);
@@ -120,6 +122,7 @@ const WorkspaceScreen = () => {
         setListId(undefined);
         setBoardId(id);
     }
+
 
     const handleGetBoardList = async () => {
         const res = await boardService.getList('/get', '', { workspaceId: 8 });
@@ -165,6 +168,14 @@ const WorkspaceScreen = () => {
             Alert.alert('Lỗi', 'Hãy chọn bảng và danh sách trước');
         }
     };
+
+    const handleGetWorkspaceInfor = (id?: any) => {
+        if (id) {
+
+        } else {
+
+        }
+    }
 
 
 

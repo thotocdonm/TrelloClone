@@ -10,7 +10,7 @@ class BaseService<T> {
         this.urlVersion = process.env.API_VERSION || 'v1';
     }
 
-    private getUrl(path: string = '', urlAfter: string = ''): string {
+    public getUrl(path: string = '', urlAfter: string = ''): string {
         return `/${this.urlVersion}/${this.urlEndPoint}${path}${urlAfter}`;
     }
 
@@ -47,10 +47,10 @@ class BaseService<T> {
         }
     }
 
-    async getById(id: number | string, path: string = '/get', urlAfter: string = ''): Promise<BaseResponse<T>> {
+    async getById(id: number | string, path: string = '/get', urlAfter: string = '', params?: Record<string, any>): Promise<BaseResponse<T>> {
         try {
             const url = this.getUrl(`${path}/${id}`, urlAfter);
-            const response = await api.get(url);
+            const response = await api.get(url, { params });
             return response.data;
         } catch (error: any) {
             const message = error.response?.data?.message || 'Failed to get item';

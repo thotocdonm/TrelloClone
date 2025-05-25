@@ -11,6 +11,8 @@ import boardService from "../../services/Board/boardService";
 import { BoardResponse } from "../../types/auth.type";
 import cardService from "../../services/Board/cardService";
 import listService from "../../services/Board/listService";
+import DraggableFlatList, { RenderItemParams } from "react-native-draggable-flatlist";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 
 const BoardScreen = () => {
     const drawerNavigation = useNavigation<DrawerNavigationProp<any>>();
@@ -134,6 +136,7 @@ const BoardScreen = () => {
             width: 250,
             flexShrink: 0,
             position: 'relative',
+
         },
         card: {
             backgroundColor: 'rgb(68, 64, 64)',
@@ -156,12 +159,14 @@ const BoardScreen = () => {
     const [scale, setScale] = useState(1);
     const [isZoomOut, setIsZoomOut] = useState(false);
     const [isAddList, setIsAddList] = useState(false);
+    const [isSearchBoard, setIsSearchBoard] = useState(false);
+    const [searchContent, setSearchContent] = useState('');
     const [listName, setListName] = useState('');
     const [cardName, setCardName] = useState('');
     const [addingCardListId, setAddingCardListId] = useState<number | null>(null);
     const [scrollEnabled, setScrollEnabled] = useState(true);
-    const scrollViewRef = useRef<ScrollView>(null); // Create ref for ScrollView
-    const [scrollOffset, setScrollOffset] = useState(0); // Store scroll position
+    const scrollViewRef = useRef<ScrollView>(null);
+    const [scrollOffset, setScrollOffset] = useState(0);
 
     const handleFocus = () => {
         setScrollEnabled(false);
@@ -195,7 +200,7 @@ const BoardScreen = () => {
             console.log(res);
             setListName('');
             setIsAddList(false);
-            getBoardData();
+            getBoardData(null);
         } catch (error) {
             console.error('Error adding list data:', error);
         }
@@ -210,7 +215,7 @@ const BoardScreen = () => {
             console.log(data, listId)
             setCardName('');
             setAddingCardListId(null);
-            getBoardData();
+            getBoardData(null);
         } catch (error) {
             console.error('Error adding card data:', error);
         }
@@ -233,9 +238,10 @@ const BoardScreen = () => {
         navigation.navigate("CardDetail", { name: cardName });
     }
 
-    const getBoardData = async () => {
+    const getBoardData = async (params: any) => {
         try {
-            const res = await boardService.getById(1);
+            const res = await boardService.getById(1, '/get', '', { keySearch: params ?? null });
+            console.log(res)
             if (res) {
                 //@ts-ignore
                 setCurrentBoard(res);
@@ -248,21 +254,49 @@ const BoardScreen = () => {
     }
 
     useEffect(() => {
-        getBoardData();
+        getBoardData(null);
     }, [])
 
-    useEffect(() => {
-        console.log(currentBoard)
-    }, [currentBoard])
 
+    useEffect(() => {
+        const delayDebounce = setTimeout(() => {
+            getBoardData(searchContent);
+        }, 500);
+
+        return () => clearTimeout(delayDebounce);
+    }, [searchContent]);
     return (
         <>
             {currentBoard ? (
                 <ThemedView style={{ flex: 1 }}>
                     <Appbar.Header style={{ alignItems: 'center', backgroundColor: darkenColor(currentBoard?.background_color) }}>
                         <Appbar.Action icon="arrow-left" onPress={() => navigation.goBack()} />
-                        <Appbar.Content title={currentBoard?.name} />
-                        <Appbar.Action icon="magnify" />
+                        {isSearchBoard ? (
+                            <View style={{ flex: 1, marginRight: 8 }}>
+                                <TextInput
+                                    placeholder="Search..."
+                                    value={searchContent}
+                                    onChangeText={setSearchContent}
+                                    mode="flat"
+                                    underlineColor="transparent"
+                                    dense
+                                    autoFocus
+                                    style={{
+                                        height: 40,
+                                        backgroundColor: darkenColor(currentBoard?.background_color),
+                                    }}
+                                />
+                            </View>
+                        ) : (
+                            <Appbar.Content title={currentBoard?.name} />
+                        )}
+                        <Appbar.Action
+                            icon={isSearchBoard ? 'close' : 'magnify'}
+                            onPress={() => {
+                                setIsSearchBoard(!isSearchBoard);
+                                if (isSearchBoard) setSearchContent('');
+                            }}
+                        />
                         <Appbar.Action icon="bell" />
                         <Appbar.Action icon="dots-vertical" />
                     </Appbar.Header>
@@ -283,16 +317,53 @@ const BoardScreen = () => {
                                         <Text style={{ fontWeight: 'bold', fontSize: 14, color: 'white' }}>{list.name}</Text>
 
                                         {/* Cards inside this list */}
-                                        {list.listcard.map(card => (
-                                            <View key={card.id} style={styles.card}>
-                                                <Text
-                                                    style={{ fontSize: 12, marginBottom: 8, color: 'white' }}
-                                                    onPress={() => handlePress(card.name)}
-                                                >
-                                                    {card.name}
-                                                </Text>
-                                            </View>
-                                        ))}
+                                        <DraggableFlatList
+                                            data={list.listcard}
+                                            keyExtractor={(item) => item.id.toString()}
+                                            onDragEnd={({ data }) => {
+                                                const updatedBoard = {
+                                                    ...currentBoard,
+                                                    boardlists: currentBoard.boardlists.map((l) => {
+                                                        if (l.id === list.id) {
+                                                            return {
+                                                                ...l,
+                                                                listcard: data,
+                                                            };
+                                                        }
+                                                        return l;
+                                                    }),
+                                                };
+                                                setCurrentBoard(updatedBoard);
+                                            }}
+                                            renderItem={({ item, drag, isActive }) => {
+                                                const animatedStyle = useAnimatedStyle(() => ({
+                                                    transform: [{ scale: isActive ? withSpring(1.05) : withSpring(1) }],
+                                                    backgroundColor: withSpring(isActive ? '#ffffff22' : '#333'),
+                                                    shadowColor: '#000',
+                                                    shadowOpacity: isActive ? 0.3 : 0,
+                                                    shadowRadius: isActive ? 6 : 0,
+                                                    elevation: isActive ? 6 : 0,
+                                                }));
+
+                                                return (
+                                                    <Animated.View style={[styles.card, animatedStyle]}>
+                                                        <Pressable
+                                                            onPress={() => handlePress(item.name)}
+                                                            onLongPress={drag}
+                                                            style={{ flex: 1 }}
+                                                        >
+                                                            <Text style={{ fontSize: 12, marginBottom: 8, color: 'white' }}>
+                                                                {item.name}
+                                                            </Text>
+                                                        </Pressable>
+                                                    </Animated.View>
+                                                );
+                                            }}
+                                            containerStyle={{ width: '100%' }}
+                                            scrollEnabled={false}
+                                        />
+
+
 
                                         {/* Add Card Input */}
                                         {addingCardListId === list.id ? (
