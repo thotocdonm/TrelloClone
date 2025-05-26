@@ -1,4 +1,4 @@
-import { useNavigation } from "@react-navigation/native";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { Alert, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { Provider as PaperProvider, Appbar, Button, IconButton, TextInput, Portal, Modal } from 'react-native-paper';
@@ -12,48 +12,27 @@ import listService from "../../services/Board/listService";
 import boardService from "../../services/Board/boardService";
 import cardService from "../../services/Board/cardService";
 import Toast from "react-native-toast-message";
+import { BoardResponse, WorkspaceResponse } from "../../types/auth.type";
 
-const WorkspaceScreen = () => {
+type WorkspaceScreenRouteProp = RouteProp<{
+    Workspace: { workspaceId: number };
+}, 'Workspace'>;
+
+
+const WorkspaceScreen = (props: any) => {
     const drawerNavigation = useNavigation<DrawerNavigationProp<any>>();
     const navigation = useNavigation<RootNavigationProp<'Workspace'>>();
 
-    const mockWorkspaceBoards = [
-        {
-            id: 1,
-            created_at: '2025-05-09T14:30:00.000000Z',
-            updated_at: '2025-05-09T14:45:00.000000Z',
-            is_deleted: 0,
-            name: 'Project Alpha',
-            background_color: '#3498db',  // Trello Blue
-            workspace_id: 1,
-            workspace: {
-                id: 1,
-                name: 'Marketing Team',
-                description: 'Workspace for the marketing team',
-            },
-        },
-        {
-            id: 2,
-            created_at: '2025-05-10T09:15:00.000000Z',
-            updated_at: '2025-05-10T09:30:00.000000Z',
-            is_deleted: 0,
-            name: 'Product Development',
-            background_color: '#e74c3c',  // Red color for the second board
-            workspace_id: 2,
-            workspace: {
-                id: 2,
-                name: 'Engineering Team',
-                description: 'Workspace for the engineering team',
-            },
-        },
-    ];
+    const route = useRoute<WorkspaceScreenRouteProp>();
+
+
 
     const styles = StyleSheet.create({
         boardContainer: {
             padding: 10,
             margin: 16,
-            backgroundColor: mockWorkspaceBoards[0].background_color,
             overflow: 'hidden',
+            backgroundColor: '#3498db',
             borderRadius: 16
         },
         board: {
@@ -101,8 +80,10 @@ const WorkspaceScreen = () => {
     const [isBoardVisible, setIsBoardVisible] = useState(false);
     const [listBoard, setListBoard] = useState<any>([]);
     const [listList, setListList] = useState<any>([]);
+    const [listWorkspaceBoard, setListWorkspaceBoard] = useState<BoardResponse[]>([]);
 
-    const [workspaceInfo, setWorkspaceInfor] = useState<any>({});
+    const [workspaceInfo, setWorkspaceInfor] = useState<any | null>(null);
+    const [workspaceId, setWorkspaceId] = useState(route.params?.workspaceId ?? null);
 
     const [boardId, setBoardId] = useState<string | undefined>(undefined);
     const [listId, setListId] = useState<string | undefined>(undefined);
@@ -110,7 +91,7 @@ const WorkspaceScreen = () => {
     const hideModal = () => setIsBoardVisible(false);
 
     useEffect(() => {
-        handleGetBoardList();
+        handleGetBoardOptions();
     }, [])
 
     useEffect(() => {
@@ -124,25 +105,28 @@ const WorkspaceScreen = () => {
     }
 
 
-    const handleGetBoardList = async () => {
-        const res = await boardService.getList('/get', '', { workspaceId: 8 });
+    const handleGetBoardOptions = async () => {
+        const res = await boardService.getList('/get', '', { workspaceId: workspaceId });
         if (res && res.code === "SUCCESS") {
             const boardOptions = res.data.map((board: any) => ({
                 label: board.name,
                 value: board.id,
             }));
             setListBoard(boardOptions)
-            console.log(boardOptions)
+            console.log(boardOptions, 'board options')
         }
     }
 
     const handleGetListList = async (boardId: any) => {
+        console.log(boardId, 'list')
         const res = await listService.getList('/get', '', { boardId: boardId });
+        console.log(res);
         if (res && res.code === "SUCCESS") {
             const listOptions = res.data.map((list: any) => ({
                 label: list.name,
                 value: list.id,
             }));
+            console.log(listOptions, 'list')
             setListList(listOptions)
         }
     }
@@ -169,13 +153,75 @@ const WorkspaceScreen = () => {
         }
     };
 
-    const handleGetWorkspaceInfor = (id?: any) => {
-        if (id) {
-
-        } else {
-
+    const handleGetWorkspaceInfor = async (id: any) => {
+        try {
+            const res = await workspaceService.getById(id);
+            if (res && res.code === "SUCCESS") {
+                setWorkspaceInfor(res.data)
+                const id = res?.data?.workspace?.id;
+                setWorkspaceId(id);
+            }
+        } catch (e) {
+            console.log(e)
+            Alert.alert('Lỗi', 'Lấy dữ liệu thất bại');
         }
     }
+
+    const handleGetUserWorkspace = async () => {
+        try {
+            const res = await workspaceService.getCurrentUserWorkspace();
+            if (res && res.code === "SUCCESS") {
+                setWorkspaceInfor(res.data[0])
+                const id = res?.data[0]?.workspace?.id;
+                setWorkspaceId(id);
+                // setWorkspaceId(res?.data[0]?.workspace?.id)
+            }
+        } catch (e) {
+            console.log(e)
+            Alert.alert('Lỗi', 'Lấy dữ liệu không gian làm việc thất bại');
+        }
+    }
+
+    const handleGetListBoard = async () => {
+        if (workspaceId) {
+            try {
+                const res = await boardService.getListBoardByWorkspaceId('/get', '', { workspaceId: workspaceId })
+                if (res && res.code === "SUCCESS") {
+                    setListWorkspaceBoard(res.data)
+                    console.log(res.data)
+                }
+            } catch (e) {
+                console.log(e)
+                Alert.alert('Lỗi', 'Lấy dữ liệu bảng thất bại');
+            }
+        }
+    }
+
+    useEffect(() => {
+        if (!workspaceId) {
+            handleGetUserWorkspace();
+        }
+    }, []);
+
+    useEffect(() => {
+        if (workspaceId) {
+            handleGetWorkspaceInfor(workspaceId);
+            handleGetListBoard();
+            handleGetBoardOptions();
+        }
+    }, [workspaceId]);
+
+
+    const [showAppbarTitle, setShowAppbarTitle] = useState(false);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowAppbarTitle(true);
+            console.log(workspaceInfo)
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, [workspaceInfo]);
 
 
 
@@ -188,7 +234,9 @@ const WorkspaceScreen = () => {
                         icon="menu"
                         onPress={() => drawerNavigation.openDrawer()}
                     />
-                    <Appbar.Content title="Your Workspace" />
+                    {showAppbarTitle && (
+                        <Appbar.Content title={workspaceInfo?.name ?? 'Your workspace'} />
+                    )}
                     <Appbar.Action icon="magnify" />
                     <Appbar.Action icon="bell" />
                     <Appbar.Action icon="dots-vertical" />
@@ -240,16 +288,16 @@ const WorkspaceScreen = () => {
                     </ThemedView>
 
                     {
-                        mockWorkspaceBoards && mockWorkspaceBoards.length > 0 &&
-                        mockWorkspaceBoards.map(workspace => {
+                        listWorkspaceBoard && listWorkspaceBoard.length > 0 &&
+                        listWorkspaceBoard.map(board => {
                             return (
-                                <Pressable key={workspace.id} onPress={() => navigation.navigate('Board', { id: workspace.id })}>
-                                    <ThemedView key={workspace.id} style={{ display: 'flex', gap: 20, alignItems: 'center', flexDirection: 'row', padding: 10 }}>
-                                        <ThemedView style={{ backgroundColor: workspace.background_color, borderRadius: 3, overflow: 'hidden', width: 60, height: 40 }}>
+                                <Pressable key={board.id} onPress={() => navigation.navigate('Board', { boardId: board.id })}>
+                                    <ThemedView key={board.id} style={{ display: 'flex', gap: 20, alignItems: 'center', flexDirection: 'row', padding: 10 }}>
+                                        <ThemedView style={{ backgroundColor: board.background_color, borderRadius: 3, overflow: 'hidden', width: 60, height: 40 }}>
 
                                         </ThemedView>
                                         <ThemedText>
-                                            {workspace.name}
+                                            {board?.name}
                                         </ThemedText>
                                     </ThemedView>
                                 </Pressable>

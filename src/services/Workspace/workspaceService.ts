@@ -8,7 +8,7 @@ class WorkspaceService extends BaseService<WorkspaceResponse> {
         super('workspace');
     }
 
-    async getCurrentUserWorkspace(path: string = '/getAll', urlAfter: string = '', params?: Record<string, any>): Promise<BaseListResponse<any>> {
+    async getCurrentUserWorkspace(path: string = '/workspace-owned-by-current-user/get', urlAfter: string = '', params?: Record<string, any>): Promise<BaseListResponse<WorkspaceResponse>> {
         try {
             const url = this.getUrl(path, urlAfter);
             const response = await api.get(url, { params });

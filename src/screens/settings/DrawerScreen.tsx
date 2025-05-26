@@ -14,6 +14,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Text, View } from "react-native";
 import { Platform, StatusBar } from 'react-native';
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import workspaceService from '../../services/Workspace/workspaceService';
+import { useEffect, useState } from 'react';
+import { WorkspaceResponse } from '../../types/auth.type';
 
 
 const Stack = createNativeStackNavigator();
@@ -53,22 +56,46 @@ const DrawerContent = (props: any) => {
   console.log(props)
   const { state, navigation } = props;
   const setIsAuthenticated = useAuthStore((state) => state.setIsAuthenticated);
+  const [listWorkspace, setListWorkspace] = useState<WorkspaceResponse[]>([]);
+  const [currentWorkspace, setCurrentWorkspace] = useState<WorkspaceResponse | null>(null);
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState<number | null>(null);
 
   const handleLogout = async () => {
     await clearTokens();
     setIsAuthenticated(false);
   };
 
+  const handleGetWorkspace = async () => {
+    const res = await workspaceService.getList();
+    if (res && res.code === 'SUCCESS') {
+      setListWorkspace(res.data);
+    }
+  }
+
+  useEffect(() => {
+    handleGetWorkspace();
+  }, [])
+
   return (
     <DrawerContentScrollView {...props} style={{ backgroundColor: "#1f1f1f" }}>
       <PaperDrawer.Section title="" >
-        <PaperDrawer.Item
-          label="Your workspace"
-          active={state.index === 0}
-          onPress={() => navigation.navigate('Workspace')}
-          icon="star"
-          style={{ backgroundColor: state.index === 0 ? '#64ffda' : 'transparent' }}
-        />
+        {listWorkspace && listWorkspace.length > 0 &&
+          listWorkspace.map((workspace) => {
+            return (
+              <PaperDrawer.Item
+                label={workspace.workspace.name}
+                active={activeWorkspaceId === workspace.workspace.id}
+                key={workspace.workspace.id}
+                onPress={() => {
+                  setActiveWorkspaceId(workspace.workspace.id);
+                  navigation.navigate('Workspace', { workspaceId: workspace.workspace.id });
+                }}
+                icon="star"
+                style={{ backgroundColor: activeWorkspaceId === workspace.workspace.id ? '#64ffda' : 'transparent' }}
+              />
+            )
+          })
+        }
         <PaperDrawer.Item
           label="Profile"
           active={state.index === 1}

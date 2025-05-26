@@ -1,11 +1,11 @@
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { KeyboardAvoidingView, Platform, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { Provider as PaperProvider, Appbar, Button, IconButton, TextInput, Icon } from 'react-native-paper';
 import ThemedView from "../../shared/components/ThemedView";
 import ThemedText from "../../shared/components/ThemedText";
 import { useEffect, useRef, useState } from "react";
-import { RootNavigationProp } from "../../types/types";
+import { RootNavigationProp, RootRouteProp } from "../../types/types";
 import { ScrollView } from "react-native-gesture-handler";
 import boardService from "../../services/Board/boardService";
 import { BoardResponse } from "../../types/auth.type";
@@ -17,6 +17,8 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-na
 const BoardScreen = () => {
     const drawerNavigation = useNavigation<DrawerNavigationProp<any>>();
     const navigation = useNavigation<RootNavigationProp<'Workspace'>>();
+    const route = useRoute<RootRouteProp<'Board'>>();
+    const { boardId } = route.params;
 
     const mockWorkspaceBoard =
     {
@@ -240,7 +242,7 @@ const BoardScreen = () => {
 
     const getBoardData = async (params: any) => {
         try {
-            const res = await boardService.getById(1, '/get', '', { keySearch: params ?? null });
+            const res = await boardService.getById(boardId, '/get', '', { keySearch: params ?? null });
             console.log(res)
             if (res) {
                 //@ts-ignore
