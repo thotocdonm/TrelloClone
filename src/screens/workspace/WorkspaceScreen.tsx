@@ -90,19 +90,7 @@ const WorkspaceScreen = (props: any) => {
     const showModal = () => setIsBoardVisible(true);
     const hideModal = () => setIsBoardVisible(false);
 
-    useEffect(() => {
-        handleGetBoardOptions();
-    }, [])
 
-    useEffect(() => {
-        handleGetListList(boardId);
-    }, [boardId])
-
-
-    const handleOnSelectBoard = (id: any) => {
-        setListId(undefined);
-        setBoardId(id);
-    }
 
 
     const handleGetBoardOptions = async () => {
@@ -209,10 +197,25 @@ const WorkspaceScreen = (props: any) => {
             handleGetListBoard();
             handleGetBoardOptions();
         }
+        console.log('ws id:', workspaceId)
     }, [workspaceId]);
 
 
     const [showAppbarTitle, setShowAppbarTitle] = useState(false);
+
+    useEffect(() => {
+        handleGetBoardOptions();
+    }, [])
+
+    useEffect(() => {
+        handleGetListList(boardId);
+    }, [boardId])
+
+
+    const handleOnSelectBoard = (id: any) => {
+        setListId(undefined);
+        setBoardId(id);
+    }
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -222,6 +225,14 @@ const WorkspaceScreen = (props: any) => {
 
         return () => clearTimeout(timer);
     }, [workspaceInfo]);
+
+    useEffect(() => {
+        if (workspaceId) {
+            // Fetch data or update state based on new workspaceId
+            console.log("Workspace ID changed to:", workspaceId);
+            // Example: fetchBoardsForWorkspace(workspaceId)
+        }
+    }, [workspaceId]);
 
 
 
@@ -283,7 +294,7 @@ const WorkspaceScreen = (props: any) => {
 
                     <ThemedView style={{ backgroundColor: 'black', padding: 16, display: 'flex', alignItems: 'flex-start' }}>
                         <ThemedText>
-                            Không gian làm việc của Nguyễn Minh Sơn
+                            Không gian làm việc của {workspaceInfo?.user}
                         </ThemedText>
                     </ThemedView>
 

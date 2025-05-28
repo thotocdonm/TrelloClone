@@ -89,72 +89,6 @@ const BoardScreen = () => {
 
 
 
-
-    const styles = StyleSheet.create({
-        container: {
-            backgroundColor: mockWorkspaceBoard.background_color,
-            overflow: 'hidden',
-            width: '100%',
-            // height: '100%',
-            flex: 1
-        },
-        board: {
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            borderRadius: 10,
-            overflow: "hidden",
-            padding: 10
-        },
-        removeBorder: {
-            borderWidth: 0,
-            borderColor: 'transparent',
-            elevation: 0, // Android shadow
-            shadowColor: 'transparent', // iOS shadow
-            shadowOffset: { width: 0, height: 0 },
-            shadowOpacity: 0,
-            shadowRadius: 0,
-        },
-        transparent: {
-            backgroundColor: 'transparent',
-        },
-        zoomControls: {
-            position: 'absolute',
-            bottom: 50, // space from the bottom
-            right: 20,   // space from the left
-            zIndex: 1000, // optional: ensures it's above other content
-            backgroundColor: "#42f57b",
-            height: 70,
-            width: 70,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            borderRadius: 100,
-            elevation: 5
-        },
-        list: {
-            backgroundColor: 'rgba(0,0,0,1)',
-            borderRadius: 8,
-            padding: 15,
-            paddingBottom: 70,
-            width: 250,
-            flexShrink: 0,
-            position: 'relative',
-
-        },
-        card: {
-            backgroundColor: 'rgb(68, 64, 64)',
-            borderRadius: 5,
-            padding: 10,
-            marginTop: 10,
-            width: '100%',
-        },
-        addCardBtn: {
-            position: 'absolute',
-            left: 0,
-            bottom: 10
-        },
-
-    });
-
     const [cardContent, setCardContent] = useState('');
     const [currentBoard, setCurrentBoard] = useState<BoardResponse | null>(null);
 
@@ -244,9 +178,9 @@ const BoardScreen = () => {
         try {
             const res = await boardService.getById(boardId, '/get', '', { keySearch: params ?? null });
             console.log(res)
-            if (res) {
+            if (res && res.code === "SUCCESS") {
                 //@ts-ignore
-                setCurrentBoard(res);
+                setCurrentBoard(res.data);
             }
 
         } catch (error) {
@@ -261,12 +195,84 @@ const BoardScreen = () => {
 
 
     useEffect(() => {
+        console.log(boardId)
+    }, [boardId])
+
+
+    useEffect(() => {
         const delayDebounce = setTimeout(() => {
             getBoardData(searchContent);
         }, 500);
 
         return () => clearTimeout(delayDebounce);
     }, [searchContent]);
+
+
+    const styles = StyleSheet.create({
+        container: {
+            backgroundColor: currentBoard?.background_color,
+            overflow: 'hidden',
+            width: '100%',
+            // height: '100%',
+            flex: 1
+        },
+        board: {
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            borderRadius: 10,
+            overflow: "hidden",
+            padding: 10
+        },
+        removeBorder: {
+            borderWidth: 0,
+            borderColor: 'transparent',
+            elevation: 0, // Android shadow
+            shadowColor: 'transparent', // iOS shadow
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0,
+            shadowRadius: 0,
+        },
+        transparent: {
+            backgroundColor: 'transparent',
+        },
+        zoomControls: {
+            position: 'absolute',
+            bottom: 50, // space from the bottom
+            right: 20,   // space from the left
+            zIndex: 1000, // optional: ensures it's above other content
+            backgroundColor: "#42f57b",
+            height: 70,
+            width: 70,
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            borderRadius: 100,
+            elevation: 5
+        },
+        list: {
+            backgroundColor: 'rgba(0,0,0,1)',
+            borderRadius: 8,
+            padding: 15,
+            paddingBottom: 70,
+            width: 250,
+            flexShrink: 0,
+            position: 'relative',
+
+        },
+        card: {
+            backgroundColor: 'rgb(68, 64, 64)',
+            borderRadius: 5,
+            padding: 10,
+            marginTop: 10,
+            width: '100%',
+        },
+        addCardBtn: {
+            position: 'absolute',
+            left: 0,
+            bottom: 10
+        },
+
+    });
+
     return (
         <>
             {currentBoard ? (
@@ -314,7 +320,7 @@ const BoardScreen = () => {
                                 onScroll={handleScroll}
                                 scrollEventThrottle={16}
                             >
-                                {currentBoard?.boardlists.map(list => (
+                                {currentBoard?.boardlists?.map(list => (
                                     <View key={list.id} style={styles.list}>
                                         <Text style={{ fontWeight: 'bold', fontSize: 14, color: 'white' }}>{list.name}</Text>
 

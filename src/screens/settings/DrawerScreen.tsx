@@ -67,6 +67,7 @@ const DrawerContent = (props: any) => {
 
   const handleGetWorkspace = async () => {
     const res = await workspaceService.getList();
+
     if (res && res.code === 'SUCCESS') {
       setListWorkspace(res.data);
     }
@@ -88,7 +89,16 @@ const DrawerContent = (props: any) => {
                 key={workspace.workspace.id}
                 onPress={() => {
                   setActiveWorkspaceId(workspace.workspace.id);
-                  navigation.navigate('Workspace', { workspaceId: workspace.workspace.id });
+                  console.log(workspace.workspace.id)
+                  navigation.reset({
+                    index: 0,
+                    routes: [
+                      {
+                        name: 'Workspace',
+                        params: { workspaceId: workspace.workspace.id },
+                      },
+                    ],
+                  });
                 }}
                 icon="star"
                 style={{ backgroundColor: activeWorkspaceId === workspace.workspace.id ? '#64ffda' : 'transparent' }}
