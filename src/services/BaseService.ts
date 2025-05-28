@@ -36,7 +36,7 @@ class BaseService<T> {
         }
     }
 
-    async update(id: number | string, data: any, path: string = '', urlAfter: string = ''): Promise<BaseResponse<T>> {
+    async update(id: number | string, data: any, path: string = '/update', urlAfter: string = ''): Promise<BaseResponse<T>> {
         try {
             const url = this.getUrl(`${path}/${id}`, urlAfter);
             const response = await api.put(url, data);

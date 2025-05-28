@@ -21,8 +21,6 @@ export type WorkspaceResponse = {
     role: string;
 };
 
-type Task = any; // Replace with actual task type if known
-
 interface Card {
     id: number;
     name: string;
@@ -48,3 +46,21 @@ export interface BoardResponse {
     background_color: string;
     boardlists: List[];
 }
+
+export type Task = {
+    task: string;
+    status: number;
+};
+
+export type CardResponse = {
+    id: number;
+    index: number;
+    name: string;
+    description: string;
+    file: string;
+    label: string;
+    start_date: string;
+    end_date: string;
+    tasks: Task[];
+    listCard: number;
+};

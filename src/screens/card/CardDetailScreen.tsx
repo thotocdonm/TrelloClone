@@ -3,23 +3,110 @@ import { StyleSheet, Text, View } from "react-native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { Appbar, IconButton, TextInput, Icon } from 'react-native-paper';
 import ThemedView from "../../shared/components/ThemedView";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { RootNavigationProp, RootRouteProp } from "../../types/types";
 import { ScrollView } from "react-native-gesture-handler";
 import { DatePickerInput } from 'react-native-paper-dates';
+import cardService from "../../services/Board/cardService";
+import { CardResponse } from "../../types/auth.type";
+import { debounce } from "lodash";
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+dayjs.extend(customParseFormat);
 
 const CardDetailScreen = () => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
+  const [description, setDescription] = useState('');
+  const [cardName, setCardName] = useState<string>('');
   const navigation = useNavigation<RootNavigationProp<'CardDetail'>>();
   const param = useRoute<RootRouteProp<"CardDetail">>();
-  const { name } = param.params;
+  const { cardId } = param.params;
+
+  const [currentCard, setCurrentCard] = useState<CardResponse | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const format = "DD/MM/YYYY HH:mm:ss"
+
+  const handleGetCard = async () => {
+    const res = await cardService.getById(cardId);
+    console.log(res);
+    if (res && res.code === "SUCCESS") {
+      const data = res.data;
+      setCurrentCard(data);
+      setCardName(data.name);
+      setDescription(data.description);
+
+      const format = "DD/MM/YYYY HH:mm:ss";
+
+      if (data.start_date) {
+        setStartDate(dayjs(data.start_date, format).toDate());
+      }
+
+      if (data.end_date) {
+        setEndDate(dayjs(data.end_date, format).toDate());
+      }
+    }
+  };
+
+
+  const debouncedUpdate = debounce(async (data) => {
+    const res = await cardService.update(cardId, data);
+    console.log('debounce', res)
+    if (res) {
+      handleGetCard();
+    }
+  }, 500);
+
+  const handleUpdateCard = (field: string, value: any) => {
+    console.log('update', field, value)
+    const data = {
+      start_date: value?.toLocaleDateString('en-GB') ?? startDate?.toLocaleDateString('en-GB'),
+      end_date: value?.toLocaleDateString('en-GB') ?? endDate?.toLocaleDateString('en-GB'),
+      name: cardName,
+      description: description,
+    };
+    console.log(data)
+    debouncedUpdate(data);
+  };
+
+  useEffect(() => {
+    handleGetCard();
+  }, [cardId])
+
+  useEffect(() => {
+    console.log('startDate formatted:', startDate?.toLocaleDateString('en-GB'));
+  }, [startDate])
+
+  useEffect(() => {
+    console.log('end formatted:', endDate?.toLocaleDateString('en-GB'));
+  }, [endDate])
 
   return (
     <ThemedView style={{ flex: 1, backgroundColor: "#1c1c1e" }}>
       <Appbar.Header>
         <Appbar.Action icon="close" onPress={() => navigation.goBack()} />
-        <Appbar.Content title={name} />
+        {isEditing ? (
+          <TextInput
+            value={cardName}
+            onChangeText={(e) => {
+              setCardName(e)
+              handleUpdateCard('name', cardName)
+            }}
+            onBlur={() => setIsEditing(false)}
+            autoFocus
+            style={{ flex: 1, backgroundColor: 'transparent', color: 'white' }}
+            underlineColor="transparent"
+            activeUnderlineColor="transparent"
+            dense
+          />
+        ) : (
+          <Appbar.Content
+            title={cardName}
+            onPress={() => setIsEditing(true)}
+          />
+        )}
         <Appbar.Action icon="dots-vertical" />
       </Appbar.Header>
 
@@ -31,29 +118,26 @@ const CardDetailScreen = () => {
             mode="flat"
             label="Thêm mô tả thẻ"
             underlineColor="transparent"
+            value={description}
+            onChangeText={(e) => {
+              setDescription(e)
+              handleUpdateCard('description', description)
+            }}
           />
         </View>
-
-        <View style={styles.cardRow}>
-          <Icon source="label-percent-outline" size={20} />
-          <Text style={styles.label}>Nhãn</Text>
-        </View>
-
-        <View style={styles.cardRow}>
-          <Icon source="account" size={20} />
-          <Text style={styles.label}>Thành viên</Text>
-        </View>
-
         <View style={[styles.cardRow, { flexDirection: 'column', alignItems: 'flex-start', gap: 20 }]}>
           <View style={styles.dateSection}>
             <Icon source="clock" size={20} />
             <View>
               <Text style={styles.label}>Ngày bắt đầu</Text>
               <DatePickerInput
-                locale="en"
+                locale="en-GB"
                 label="Start"
                 value={startDate}
-                onChange={(d) => setStartDate(d)}
+                onChange={(d) => {
+                  setStartDate(d)
+                  handleUpdateCard('start_date', d)
+                }}
                 inputMode="start"
                 style={styles.dateInput}
               />
@@ -65,10 +149,13 @@ const CardDetailScreen = () => {
             <View>
               <Text style={styles.label}>Ngày kết thúc</Text>
               <DatePickerInput
-                locale="en"
+                locale="en-GB"
                 label="End"
                 value={endDate}
-                onChange={(d) => setEndDate(d)}
+                onChange={(d) => {
+                  setEndDate(d)
+                  handleUpdateCard('end_date', d)
+                }}
                 inputMode="end"
                 style={styles.dateInput}
               />
@@ -88,9 +175,9 @@ const CardDetailScreen = () => {
           <IconButton icon="plus" size={20} style={styles.iconRight} onPress={() => { }} />
         </View>
 
-        <View style={[styles.cardRow,{backgroundColor:"transparent", borderWidth: 0}]}>
+        <View style={[styles.cardRow, { backgroundColor: "transparent", borderWidth: 0 }]}>
           <Text style={styles.label}>Hoạt động</Text>
-          <IconButton icon="dots-vertical" size={20} style={[styles.iconRight,{backgroundColor:"transparent"}]} onPress={() => { }} />
+          <IconButton icon="dots-vertical" size={20} style={[styles.iconRight, { backgroundColor: "transparent" }]} onPress={() => { }} />
         </View>
       </ScrollView>
 
@@ -114,7 +201,7 @@ export default CardDetailScreen;
 const styles = StyleSheet.create({
   scrollContainer: {
     padding: 10,
-    paddingBottom: 100, 
+    paddingBottom: 100,
   },
   cardRow: {
     backgroundColor: "#2b2b2b",

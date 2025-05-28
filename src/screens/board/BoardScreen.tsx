@@ -1,10 +1,10 @@
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { KeyboardAvoidingView, Platform, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { Provider as PaperProvider, Appbar, Button, IconButton, TextInput, Icon } from 'react-native-paper';
 import ThemedView from "../../shared/components/ThemedView";
 import ThemedText from "../../shared/components/ThemedText";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { RootNavigationProp, RootRouteProp } from "../../types/types";
 import { ScrollView } from "react-native-gesture-handler";
 import boardService from "../../services/Board/boardService";
@@ -17,6 +17,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-na
 const BoardScreen = () => {
     const drawerNavigation = useNavigation<DrawerNavigationProp<any>>();
     const navigation = useNavigation<RootNavigationProp<'Workspace'>>();
+    const cardNavigation = useNavigation<RootNavigationProp<'CardDetail'>>();
     const route = useRoute<RootRouteProp<'Board'>>();
     const { boardId } = route.params;
 
@@ -170,8 +171,8 @@ const BoardScreen = () => {
         let b = Math.max((num & 0x0000FF) - amount, 0);
         return `rgb(${r}, ${g}, ${b})`;
     };
-    const handlePress = (cardName: string) => {
-        navigation.navigate("CardDetail", { name: cardName });
+    const handlePress = (cardId: number) => {
+        cardNavigation.navigate("CardDetail", { cardId: cardId });
     }
 
     const getBoardData = async (params: any) => {
@@ -206,6 +207,12 @@ const BoardScreen = () => {
 
         return () => clearTimeout(delayDebounce);
     }, [searchContent]);
+
+    useFocusEffect(
+        useCallback(() => {
+            getBoardData(null);
+        }, [])
+    );
 
 
     const styles = StyleSheet.create({
@@ -356,7 +363,7 @@ const BoardScreen = () => {
                                                 return (
                                                     <Animated.View style={[styles.card, animatedStyle]}>
                                                         <Pressable
-                                                            onPress={() => handlePress(item.name)}
+                                                            onPress={() => handlePress(item.id)}
                                                             onLongPress={drag}
                                                             style={{ flex: 1 }}
                                                         >
