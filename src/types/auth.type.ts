@@ -1,6 +1,6 @@
 export type LoginResponse = {
-    access: string;
-    refresh: string;
+    access:string;
+    refresh:string;
 }
 
 export type RegisterResponse = {
@@ -21,6 +21,17 @@ export type WorkspaceResponse = {
     role: string;
 };
 
+export type SearchWorkspaceResponse = {
+    boards: Board[];
+    cards: Card[];
+}
+
+interface Board{
+    id: number;
+    name: string;
+    background_color: string;
+}
+
 interface Card {
     id: number;
     name: string;
@@ -39,8 +50,6 @@ interface List {
     board: number;
     listcard: Card[];
 }
-
-
 
 export interface BoardResponse {
     id: number;
@@ -67,7 +76,6 @@ export type CardResponse = {
     listCard: number;
     comment: Comment[];
 };
-
 export type Author = {
     profile_picture: string | null;
     bio: string | null;
@@ -87,3 +95,4 @@ export type Comment = {
     created_at: string; // ISO date string
     updated_at: string; // ISO date string
 };
+// export type SearchWorkspaceResponse = {
