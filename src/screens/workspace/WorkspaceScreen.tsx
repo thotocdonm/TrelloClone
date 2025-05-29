@@ -1,10 +1,10 @@
-import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { RouteProp, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
 import { Alert, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { Provider as PaperProvider, Appbar, Button, IconButton, TextInput, Portal, Modal } from 'react-native-paper';
 import ThemedView from "../../shared/components/ThemedView";
 import ThemedText from "../../shared/components/ThemedText";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { RootNavigationProp } from "../../types/types";
 import { Dropdown } from "react-native-paper-dropdown";
 import workspaceService from "../../services/Workspace/workspaceService";
@@ -218,6 +218,19 @@ const WorkspaceScreen = (props: any) => {
         return () => clearTimeout(timer);
     }, [workspaceInfo]);
 
+
+    useFocusEffect(
+        useCallback(() => {
+            console.log('abx')
+            if (workspaceId) {
+                handleGetWorkspaceInfor(workspaceId);
+                handleGetListBoard();
+                handleGetBoardOptions();
+            } else (
+                handleGetUserWorkspace()
+            )
+        }, [])
+    );
 
 
     return (

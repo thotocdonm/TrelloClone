@@ -1,7 +1,7 @@
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
-import { Alert, KeyboardAvoidingView, Platform, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Dimensions, KeyboardAvoidingView, Platform, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
-import { Provider as PaperProvider, Appbar, Button, IconButton, TextInput, Icon } from 'react-native-paper';
+import { Provider as PaperProvider, Appbar, Button, IconButton, TextInput, Icon, Modal, Portal } from 'react-native-paper';
 import ThemedView from "../../shared/components/ThemedView";
 import ThemedText from "../../shared/components/ThemedText";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -13,6 +13,7 @@ import cardService from "../../services/Board/cardService";
 import listService from "../../services/Board/listService";
 import DraggableFlatList, { RenderItemParams } from "react-native-draggable-flatlist";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import ColorPicker from "react-native-wheel-color-picker";
 
 const BoardScreen = () => {
     const drawerNavigation = useNavigation<DrawerNavigationProp<any>>();
@@ -41,24 +42,19 @@ const BoardScreen = () => {
     const [scrollEnabled, setScrollEnabled] = useState(true);
     const scrollViewRef = useRef<ScrollView>(null);
     const [scrollOffset, setScrollOffset] = useState(0);
-    const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
     const [editingListId, setEditingListId] = useState<number | null>(null);
     const [editedName, setEditedName] = useState('');
 
-    const [value, setValue] = useState(null);
-    const dropdownRef = useRef(null);
+    const [menuVisible, setMenuVisible] = useState(false);
+    const [editModalVisible, setEditModalVisible] = useState(false);
+    const [editedBoardName, setEditedBoardName] = useState('');
 
-    const handleSelect = (item: any) => {
-        setValue(item.value);
-        if (item.value === 'edit') {
-            // Handle edit
-            console.log('Edit clicked');
-        } else if (item.value === 'delete') {
-            // Handle delete
-            console.log('Delete clicked');
-        }
-    };
+    const [backgroundColor, setBackgroundColor] = useState<string | undefined>('');
+    const [visible, setVisible] = useState(false);
+
+    const showModal = () => setVisible(true);
+    const hideModal = () => setVisible(false);
 
     const handleFocus = () => {
         setScrollEnabled(false);
@@ -171,6 +167,26 @@ const BoardScreen = () => {
         setEditingListId(null);
     };
 
+    const handleEditBoard = () => {
+        setEditedBoardName(currentBoard?.name || '');
+        setBackgroundColor(currentBoard?.background_color)
+        setEditModalVisible(true);
+        setMenuVisible(false);
+    };
+
+    const handleSaveBoardName = async () => {
+        try {
+            //@ts-ignore
+            const res = await boardService.update(currentBoard?.id, { name: editedBoardName, background_color: backgroundColor });
+            if (res) {
+                getBoardData(null);
+                setEditModalVisible(false);
+            }
+        } catch (e) {
+            console.log(e);
+        }
+    };
+
     useEffect(() => {
         getBoardData(null);
     }, [])
@@ -196,11 +212,29 @@ const BoardScreen = () => {
     );
 
 
+    const screenWidth = Dimensions.get('window').width;
+    const modalWidth = screenWidth * 0.8;
+
     const styles = StyleSheet.create({
+        colorPickerModal: {
+            backgroundColor: '1E1E1E',
+            padding: 20,
+            width: modalWidth,     // 90% of screen width
+            alignSelf: 'center',    // center the modal
+            borderRadius: 10,
+            position: 'relative'
+        },
+        colorBox: {
+            width: 40,
+            height: 40,
+            borderRadius: 6,
+            borderWidth: 1,
+            borderColor: '#ccc'
+        },
         menuContainer: {
             position: 'absolute',
-            right: 10,
-            top: 40,
+            right: 16,  // Adjusted from 10
+            top: 80,    // Adjusted from 40 to account for AppBar height
             backgroundColor: 'white',
             borderRadius: 8,
             padding: 8,
@@ -210,7 +244,7 @@ const BoardScreen = () => {
             shadowOpacity: 0.25,
             shadowRadius: 4,
             elevation: 5,
-            zIndex: 100,
+            zIndex: 1000, // Increased from 100
         },
         menuItem: {
             padding: 12,
@@ -277,6 +311,38 @@ const BoardScreen = () => {
             bottom: 10
         },
 
+        // Fixed modal styles
+        modalOverlay: {
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            zIndex: 1001, // Higher than menu
+        },
+        modalContent: {
+            width: '80%',
+            backgroundColor: 'white',
+            borderRadius: 8,
+            padding: 20,
+            margin: 20,
+        },
+        modalTitle: {
+            fontSize: 18,
+            fontWeight: 'bold',
+            marginBottom: 16,
+            color: 'black', // Explicit color
+        },
+        modalInput: {
+            marginBottom: 20,
+            backgroundColor: 'white',
+        },
+        modalButtons: {
+            flexDirection: 'row',
+            justifyContent: 'flex-end',
+            gap: 10,
+            marginTop: 10,
+        },
+
     });
 
     return (
@@ -312,8 +378,45 @@ const BoardScreen = () => {
                             }}
                         />
                         <Appbar.Action icon="bell" />
-                        <Appbar.Action icon="dots-vertical" />
+                        <Appbar.Action
+                            icon="dots-vertical"
+                            onPress={() => setMenuVisible(!menuVisible)}
+                        />
+
+
                     </Appbar.Header>
+
+                    {menuVisible && (
+                        <View style={styles.menuContainer}>
+                            <TouchableOpacity
+                                style={styles.menuItem}
+                                onPress={handleEditBoard}
+                            >
+                                <Text>Edit Board</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.menuItem, { borderTopWidth: 1, borderTopColor: '#eee' }]}
+                                onPress={() => {
+                                    setMenuVisible(false);
+                                    Alert.alert(
+                                        'Delete Board',
+                                        'Are you sure you want to delete this board?',
+                                        [
+                                            { text: 'Cancel', style: 'cancel' },
+                                            {
+                                                text: 'Delete', onPress: () => {
+                                                    boardService.delete(currentBoard?.id);
+                                                    navigation.goBack();
+                                                }
+                                            }
+                                        ]
+                                    );
+                                }}
+                            >
+                                <Text style={{ color: 'red' }}>Delete Board</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
 
                     <ThemedView style={[styles.container]}>
                         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -360,7 +463,6 @@ const BoardScreen = () => {
                                                 icon="trash-can-outline"
                                                 size={20}
                                                 onPress={() => {
-                                                    setOpenMenuId(null);
                                                     Alert.alert(
                                                         'Delete List',
                                                         'Are you sure you want to delete this list?',
@@ -520,6 +622,62 @@ const BoardScreen = () => {
                     <Text>Loading board...</Text>
                 </View>
             )}
+
+            <Portal>
+                <Modal
+                    visible={editModalVisible}
+                    onDismiss={() => setEditModalVisible(false)}
+                    contentContainerStyle={styles.modalContent}
+                >
+                    <Text style={styles.modalTitle}>Edit Board Name</Text>
+                    <TextInput
+                        value={editedBoardName}
+                        onChangeText={setEditedBoardName}
+                        style={styles.modalInput}
+                        autoFocus
+                        mode="outlined"
+                        textColor="black"
+                    />
+
+                    <View style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexDirection: 'row', backgroundColor: '#2b2b2b', padding: 10 }}>
+                        <ThemedText>
+                            Phông nền bảng
+                        </ThemedText>
+                        <TouchableOpacity
+                            style={[styles.colorBox, styles.removeBorder, { backgroundColor: backgroundColor }]}
+                            onPress={() => setVisible(true)}
+                        />
+                    </View>
+                    <View style={styles.modalButtons}>
+                        <Button
+                            mode="outlined"
+                            onPress={() => setEditModalVisible(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            mode="contained"
+                            onPress={handleSaveBoardName}
+                            disabled={!editedBoardName.trim()}
+                            style={{ marginLeft: 8 }}
+                        >
+                            Save
+                        </Button>
+                    </View>
+                </Modal>
+            </Portal>
+
+            <Portal>
+                <Modal visible={visible} onDismiss={hideModal} contentContainerStyle={[styles.colorPickerModal, styles.removeBorder]}>
+                    <View style={{ height: 300 }}>
+                        <ColorPicker
+                            color={backgroundColor}
+                            onColorChange={setBackgroundColor}
+
+                        />
+                    </View>
+                </Modal>
+            </Portal>
         </>
     );
 };

@@ -60,11 +60,7 @@ const CreateBoardScreen = () => {
 
     });
 
-    const OPTIONS = [
-        { label: 'Male', value: 'male' },
-        { label: 'Female', value: 'female' },
-        { label: 'Other', value: 'other' },
-    ];
+
 
     const [visible, setVisible] = useState(false);
     const [boardName, setBoardName] = useState('');
