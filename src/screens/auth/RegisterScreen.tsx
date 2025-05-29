@@ -3,7 +3,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import { Alert, StyleSheet } from 'react-native';
 import { Button, MD3Colors, TextInput } from 'react-native-paper';
-import Icon from '@react-native-vector-icons/fontawesome6';
 import { RootNavigationProp } from '../../types/types';
 import authService from '../../services/Auth/authService';
 import ThemedView from '../../shared/components/ThemedView';
@@ -29,7 +28,6 @@ const RegisterScreen = () => {
 
   return (
     <ThemedView style={styles.container}>
-      <Icon name="trello" size={50} color="#0079BF" iconStyle='brand' />
       <ThemedText style={{ fontSize: 25, fontWeight: 'bold' }}>Register</ThemedText>
       <TextInput style={styles.input} mode='outlined' placeholder="Email" value={email} onChangeText={setEmail} />
       <TextInput style={styles.input} mode='outlined' placeholder="Username" value={username} onChangeText={setUsername} />

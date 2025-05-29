@@ -245,9 +245,27 @@ const WorkspaceScreen = (props: any) => {
                     {showAppbarTitle && (
                         <Appbar.Content title={workspaceInfo?.name ?? 'Your workspace'} />
                     )}
-                    <Appbar.Action icon="magnify" />
+                    <Appbar.Action
+                        icon="magnify"
+                        onPress={() => {
+                            if (workspaceId !== null) {
+                                navigation.navigate("SearchWorkspace", { workspaceId: workspaceId });
+                            } else {
+                                Alert.alert('Lỗi', 'Không tìm thấy workspaceId hợp lệ.');
+                            }
+                        }}
+                    />
                     <Appbar.Action icon="bell" />
-                    <Appbar.Action icon="dots-vertical" />
+                    <Appbar.Action
+                        icon="dots-vertical"
+                        onPress={() => {
+                            if (workspaceId !== null) {
+                                navigation.navigate("MemberWorkspace", { workspaceId: workspaceId, name: workspaceInfo?.name });
+                            } else {
+                                Alert.alert('Lỗi', 'Không tìm thấy workspaceId hợp lệ.');
+                            }
+                        }}
+                    />
                 </Appbar.Header>
 
                 <ThemedView style={{ width: "100%", height: '100%' }}>

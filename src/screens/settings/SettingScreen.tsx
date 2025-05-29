@@ -3,7 +3,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useState } from 'react';
 import { View, Alert, StyleSheet } from 'react-native';
 import { Button, MD3Colors, Text, TextInput } from 'react-native-paper';
-import Icon from '@react-native-vector-icons/fontawesome6';
 import { RootNavigationProp } from '../../types/types';
 import authService from '../../services/Auth/authService';
 

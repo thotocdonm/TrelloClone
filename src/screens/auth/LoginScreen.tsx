@@ -3,7 +3,6 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { View, Alert, StyleSheet } from 'react-native';
 import { Button, MD3Colors, TextInput } from 'react-native-paper';
-import Icon from '@react-native-vector-icons/fontawesome6';
 import { RootNavigationProp } from '../../types/types';
 import authService from '../../services/Auth/authService';
 import { saveTokens } from '../../services/Auth/tokenService';
@@ -21,6 +20,8 @@ const LoginScreen = () => {
   const navigation = useNavigation<RootNavigationProp<'Login'>>();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const setIsAuthenticated = useAuthStore((state) => state.setIsAuthenticated);
+  const setEmailAuth = useAuthStore((state)=>state.setEmailAuth)
+  const emailAuth = useAuthStore((state)=>state.emailAuth);
 
   const handleLogin = async (email: string, password: string) => {
     try {
@@ -32,8 +33,9 @@ const LoginScreen = () => {
       if (res && res.code === "SUCCESS") {
         await saveTokens(res.data.access, res.data.refresh);
         setIsAuthenticated(true);
+        setEmailAuth(email);
+        console.log('email auth:',emailAuth)
       } else {
-        // Show toast for non-success response
         Toast.show({
           type: 'error',
           text1: 'Login Failed',
@@ -41,7 +43,6 @@ const LoginScreen = () => {
         });
       }
     } catch (error: any) {
-      // Show toast for network or other errors
       Toast.show({
         type: 'error',
         text1: 'Error',
@@ -55,7 +56,6 @@ const LoginScreen = () => {
 
   return (
     <ThemedView style={styles.container}>
-      <Icon name="trello" size={50} color="#0079BF" iconStyle='brand' />
       <ThemedText style={{ fontSize: 25, fontWeight: 'bold' }}>Welcome !</ThemedText>
       <TextInput style={styles.input} mode='outlined' placeholder="Email" value={email} onChangeText={setEmail} />
       <TextInput style={styles.input} mode='outlined' placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} />

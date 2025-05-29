@@ -10,7 +10,12 @@ export type RootStackParamList = {
   Settings: undefined;
   CreateBoard: undefined;
   Board: { boardId: number };
-  CardDetail: { cardId: number }
+  CardDetail: { cardId: number },
+  SearchWorkspace: { workspaceId: number };
+  MemberWorkspace: { workspaceId: number , name: string };
+  AddMember:{user:any,workspaceId: number};
+  SearchUserToAdd: { workspaceId: number };
+  UpdateWorkspace: { workspaceId: number };
 };
 
 export type BaseResponse<T> = {

@@ -21,6 +21,16 @@ export type WorkspaceResponse = {
     role: string;
 };
 
+export type SearchWorkspaceResponse = {
+    boards: Board[];
+    cards: Card[];
+};
+interface Board{
+    id: number;
+    name: string;
+    background_color: string;
+};
+
 interface Card {
     id: number;
     name: string;

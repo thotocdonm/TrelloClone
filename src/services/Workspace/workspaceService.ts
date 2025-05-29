@@ -10,6 +10,7 @@ class WorkspaceService extends BaseService<WorkspaceResponse> {
 
     async getCurrentUserWorkspace(path: string = '/workspace-owned-by-current-user/get', urlAfter: string = '', params?: Record<string, any>): Promise<BaseListResponse<WorkspaceResponse>> {
         try {
+            console.log("param: ", params)
             const url = this.getUrl(path, urlAfter);
             const response = await api.get(url, { params });
             return response.data;
@@ -19,6 +20,16 @@ class WorkspaceService extends BaseService<WorkspaceResponse> {
         }
     }
 
+    async getAllUserInWorkspace(id: number, path: string = '/get-all-user-in-workspace', urlAfter: string = '', params?: Record<string, any>): Promise<BaseListResponse<any>> {
+        try {
+            const url = this.getUrl(`${path}/${id}`, urlAfter);
+            const response = await api.get(url, { params });
+            return response.data;
+        } catch (error: any) {
+            const message = error.response?.data?.message || 'Failed to fetch users in workspace';
+            throw new Error(message);
+        }
+    }
 }
 
 export default new WorkspaceService()
