@@ -135,7 +135,6 @@ const WorkspaceScreen = (props: any) => {
         } else {
             Alert.alert('Lỗi', 'Hãy chọn bảng và danh sách trước');
         }
-    };
 
     const handleGetWorkspaceInfor = async (id: any) => {
         try {
@@ -233,7 +232,142 @@ const WorkspaceScreen = (props: any) => {
     );
 
 
-    return (
+    // return (
+    //     <>
+    //         <ThemedView style={{ flex: 1 }}>
+
+    //             <Appbar.Header style={{ alignItems: 'center' }}>
+    //                 <Appbar.Action
+    //                     icon="menu"
+    //                     onPress={() => drawerNavigation.openDrawer()}
+    //                 />
+    //                 {showAppbarTitle && (
+    //                     <Appbar.Content title={workspaceInfo?.name ?? 'Your workspace'} />
+    //                 )}
+    //                 <Appbar.Action icon="magnify" onPress={()=>navigation.navigate("SearchWorkspace",{workspaceId:workspaceId})}/>
+    //                 <Appbar.Action icon="bell" />
+    //                 <Appbar.Action icon="dots-vertical" onPress={() => navigation.navigate("MemberWorkspace", {workspaceId:workspaceId, name: workspaceInfo?.name })}/>
+    //             </Appbar.Header>
+
+    //             <ThemedView style={{ width: "100%", height: '100%' }}>
+    //                 <ThemedView style={styles.boardContainer}>
+    //                     <ThemedView style={styles.board}>
+    //                         <View style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', alignItems: 'flex-start' }}>
+    //                             <View>
+    //                                 <ThemedText style={{ fontWeight: 'bold' }}>
+    //                                     {listBoard.find((item: any) => item.value === boardId)?.label || "Board name"}
+    //                                 </ThemedText>
+    //                                 <ThemedText>
+    //                                     {listList.find((item: any) => item.value === listId)?.label || "List name"}
+    //                                 </ThemedText>
+    //                             </View>
+
+
+    //                             <IconButton
+    //                                 icon='pencil'
+    //                                 size={24}
+    //                                 onPress={showModal}
+    //                                 accessibilityLabel="Avatar button"
+    //                             />
+    //                         </View>
+    //                         <ThemedView style={styles.transparent}>
+    //                             <TextInput
+    //                                 placeholder="Thêm thẻ"
+    //                                 outlineStyle={{ borderRadius: 10, overflow: 'hidden', ...styles.removeBorder }}
+    //                                 mode="outlined"
+    //                                 value={cardContent}
+    //                                 onChangeText={setCardContent}
+    //                                 right={
+    //                                     cardContent ? <TextInput.Icon icon="check" color='green' onPress={() => handleAddCardShortcut()} /> : null
+    //                                 }
+    //                             >
+
+    //                             </TextInput>
+    //                         </ThemedView>
+
+    //                     </ThemedView>
+    //                 </ThemedView>
+
+    //                 <ThemedView style={{ backgroundColor: 'black', padding: 16, display: 'flex', alignItems: 'flex-start' }}>
+    //                     <ThemedText>
+    //                         Không gian làm việc của {workspaceInfo?.user}
+    //                     </ThemedText>
+    //                 </ThemedView>
+
+    //                 {
+    //                     listWorkspaceBoard && listWorkspaceBoard.length > 0 &&
+    //                     listWorkspaceBoard.map(board => {
+    //                         return (
+    //                             <Pressable key={board.id} onPress={() => navigation.navigate('Board', { boardId: board.id })}>
+    //                                 <ThemedView key={board.id} style={{ display: 'flex', gap: 20, alignItems: 'center', flexDirection: 'row', padding: 10 }}>
+    //                                     <ThemedView style={{ backgroundColor: board.background_color, borderRadius: 3, overflow: 'hidden', width: 60, height: 40 }}>
+
+    //                                     </ThemedView>
+    //                                     <ThemedText>
+    //                                         {board?.name}
+    //                                     </ThemedText>
+    //                                 </ThemedView>
+    //                             </Pressable>
+
+    //                         )
+    //                     })
+    //                 }
+    //             </ThemedView>
+
+    //             <Button icon="plus" mode="contained" style={styles.createTableBtn} onPress={() => navigation.navigate('CreateBoard')}>
+    //                 Tạo bảng
+    //             </Button>
+
+    //         <Portal>
+    //             <Modal visible={isBoardVisible} onDismiss={hideModal} contentContainerStyle={styles.modal} theme={{ colors: { primary: '#0079BF' } }}>
+    //                 <View
+    //                     style={{
+    //                         flexDirection: 'row',
+    //                         justifyContent: 'space-between',
+    //                         alignItems: 'center',
+    //                         borderBottomWidth: 1,
+    //                         borderBottomColor: '#ccc',
+    //                     }}
+    //                 >
+    //                     <IconButton
+    //                         icon="close"
+    //                         size={24}
+    //                         onPress={hideModal}
+    //                         accessibilityLabel="Close modal"
+    //                     />
+    //                     <Text style={{ fontSize: 18, fontWeight: 'bold', color: 'white' }}>Thay đổi vị trí</Text>
+    //                     <IconButton
+    //                         icon="check"
+    //                         size={24}
+    //                         onPress={hideModal}
+    //                         accessibilityLabel="Confirm action"
+    //                     />
+    //                 </View>
+    //                 <View style={{ paddingVertical: 20, display: 'flex', flexDirection: 'column', gap: 20 }}>
+    //                     <Dropdown
+    //                         mode="flat"
+    //                         label="Đến"
+    //                         placeholder="Bảng"
+    //                         options={listBoard}
+    //                         value={boardId}
+    //                         onSelect={(id) => (handleOnSelectBoard(id))}
+    //                         hideMenuHeader={true}
+    //                     />
+    //                     <Dropdown
+    //                         mode="flat"
+    //                         label="Danh sách"
+    //                         placeholder="Danh sách"
+    //                         options={listList}
+    //                         value={listId}
+    //                         onSelect={setListId}
+    //                         hideMenuHeader={true}
+    //                     />
+    //                 </View>
+    //             </Modal>
+    //         </Portal>
+    //     </>
+    // );
+     return (
         <>
             <ThemedView style={{ flex: 1 }}>
 
@@ -245,9 +379,9 @@ const WorkspaceScreen = (props: any) => {
                     {showAppbarTitle && (
                         <Appbar.Content title={workspaceInfo?.name ?? 'Your workspace'} />
                     )}
-                    <Appbar.Action icon="magnify" onPress={()=>navigation.navigate("SearchWorkspace",{workspaceId:workspaceId})}/>
+                    <Appbar.Action icon="magnify" />
                     <Appbar.Action icon="bell" />
-                    <Appbar.Action icon="dots-vertical" onPress={() => navigation.navigate("MemberWorkspace", {workspaceId:workspaceId, name: workspaceInfo?.name })}/>
+                    <Appbar.Action icon="dots-vertical" />
                 </Appbar.Header>
 
                 <ThemedView style={{ width: "100%", height: '100%' }}>
@@ -370,6 +504,6 @@ const WorkspaceScreen = (props: any) => {
         </>
 
     )
-};
+};}
 
 export default WorkspaceScreen;
