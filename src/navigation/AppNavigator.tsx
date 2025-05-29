@@ -12,6 +12,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import CreateBoardScreen from "../screens/workspace/CreateBoardScreen";
 import BoardScreen from "../screens/board/BoardScreen";
 import CardDetailScreen from "../screens/card/CardDetailScreen"
+import SearchWorkspaceScreen from "../screens/workspace/SearchWorkspaceScreen";
+import MemberWorkspaceScreen from "../screens/workspace/MemberWorkspaceScreen";
+import AddMemberScreen from "../screens/workspace/AddMemberScreen";
+import SearchUserToAddScreen from "../screens/workspace/SearchUserToAddScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -45,6 +49,42 @@ const AppNavigator = () => {
               <Stack.Screen
                 name="Drawer"
                 component={DrawerScreen}
+                options={{
+                  headerBackVisible: false,
+                  gestureEnabled: false,
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="SearchUserToAdd"
+                component={SearchUserToAddScreen}
+                options={{
+                  headerBackVisible: false,
+                  gestureEnabled: false,
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="AddMember"
+                component={AddMemberScreen}
+                options={{
+                  headerBackVisible: false,
+                  gestureEnabled: false,
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="MemberWorkspace"
+                component={MemberWorkspaceScreen}
+                options={{
+                  headerBackVisible: false,
+                  gestureEnabled: false,
+                  headerShown: false,
+                }}
+              />
+              <Stack.Screen
+                name="SearchWorkspace"
+                component={SearchWorkspaceScreen}
                 options={{
                   headerBackVisible: false,
                   gestureEnabled: false,

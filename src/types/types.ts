@@ -9,8 +9,12 @@ export type RootStackParamList = {
   MainStack: { screen?: string };
   Settings: undefined;
   CreateBoard: undefined;
-  Board: { id: number };
-  CardDetail: {name:string}
+  Board: { boardId: number };
+  CardDetail: { cardId: number },
+  SearchWorkspace: { workspaceId: number };
+  MemberWorkspace: { workspaceId: number , name: string };
+  AddMember:{user:any,workspaceId: number};
+  SearchUserToAdd: { workspaceId: number };
 };
 
 export type BaseResponse<T> = {

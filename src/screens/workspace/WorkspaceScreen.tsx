@@ -84,6 +84,164 @@ const WorkspaceScreen = () => {
     });
 
     const [cardContent, setCardContent] = useState('');
+    const [isBoardVisible, setIsBoardVisible] = useState(false);
+    const [listBoard, setListBoard] = useState<any>([]);
+    const [listList, setListList] = useState<any>([]);
+    const [listWorkspaceBoard, setListWorkspaceBoard] = useState<BoardResponse[]>([]);
+
+    const [workspaceInfo, setWorkspaceInfor] = useState<any | null>(null);
+    const [workspaceId, setWorkspaceId] = useState(route.params?.workspaceId ?? null);
+
+    const [boardId, setBoardId] = useState<string | undefined>(undefined);
+    const [listId, setListId] = useState<string | undefined>(undefined);
+    const showModal = () => setIsBoardVisible(true);
+    const hideModal = () => setIsBoardVisible(false);
+
+
+
+
+    const handleGetBoardOptions = async () => {
+        const res = await boardService.getList('/get', '', { workspaceId: workspaceId });
+        if (res && res.code === "SUCCESS") {
+            const boardOptions = res.data.map((board: any) => ({
+                label: board.name,
+                value: board.id,
+            }));
+            setListBoard(boardOptions)
+            console.log(boardOptions, 'board options')
+            console.log('workspace ID handleGetBoardOptions:', workspaceId)
+        }
+    }
+
+    const handleGetListList = async (boardId: any) => {
+        console.log(boardId, 'list')
+        const res = await listService.getList('/get', '', { boardId: boardId });
+        console.log(res);
+        if (res && res.code === "SUCCESS") {
+            const listOptions = res.data.map((list: any) => ({
+                label: list.name,
+                value: list.id,
+            }));
+            console.log(listOptions, 'list')
+            setListList(listOptions)
+        }
+    }
+
+    const handleAddCardShortcut = async () => {
+        if (listId !== undefined) {
+            try {
+                const res = await cardService.create({ name: cardContent, listCard: listId });
+
+                if (res && res.code === "SUCCESS") {
+                    Alert.alert('Thành công', res.message || 'Thẻ đã được thêm.');
+                    // Optionally reset input
+                    setCardContent('');
+                } else {
+                    Alert.alert('Lỗi', res.message || 'Thêm thẻ thất bại.');
+                }
+
+            } catch (error) {
+                console.error(error);
+                Alert.alert('Lỗi', 'Có lỗi xảy ra khi thêm thẻ.');
+            }
+        } else {
+            Alert.alert('Lỗi', 'Hãy chọn bảng và danh sách trước');
+        }
+    };
+
+    const handleGetWorkspaceInfor = async (id: any) => {
+        try {
+            const res = await workspaceService.getById(id);
+            if (res && res.code === "SUCCESS") {
+                setWorkspaceInfor(res.data)
+                // const id = res?.data?.workspace?.id;
+                // setWorkspaceId(id);
+                console.log(res.data)
+                console.log('workspace ID handleGetWorkspaceInfor:', workspaceId)
+                
+            }
+        } catch (e) {
+            console.log(e)
+            Alert.alert('Lỗi', 'Lấy dữ liệu thất bại');
+        }
+    }
+
+    const handleGetUserWorkspace = async () => {
+        try {
+            const res = await workspaceService.getCurrentUserWorkspace();
+            if (res && res.code === "SUCCESS") {
+                setWorkspaceInfor(res.data[0])
+                const id = res?.data[0]?.workspace?.id;
+                setWorkspaceId(id);
+                // setWorkspaceId(res?.data[0]?.workspace?.id)
+            }
+        } catch (e) {
+            console.log(e)
+            Alert.alert('Lỗi', 'Lấy dữ liệu không gian làm việc thất bại');
+        }
+    }
+
+    const handleGetListBoard = async () => {
+        if (workspaceId) {
+            try {
+                const res = await boardService.getListBoardByWorkspaceId('/get', '', { workspaceId: workspaceId })
+                if (res && res.code === "SUCCESS") {
+                    setListWorkspaceBoard(res.data)
+                    console.log(res.data)
+                    console.log('workspace ID handleGetListBoard:', workspaceId)
+                }
+            } catch (e) {
+                console.log(e)
+                Alert.alert('Lỗi', 'Lấy dữ liệu bảng thất bại');
+            }
+        }
+    }
+
+    useEffect(() => {
+        if (!workspaceId) {
+            handleGetUserWorkspace();
+        }
+    }, []);
+
+    useEffect(() => {
+        if (workspaceId) {
+            handleGetWorkspaceInfor(workspaceId);
+            handleGetListBoard();
+            handleGetBoardOptions();
+        }
+        
+
+    }, [workspaceId]);
+
+
+    const [showAppbarTitle, setShowAppbarTitle] = useState(false);
+
+    useEffect(() => {
+        handleGetBoardOptions();
+
+    }, [])
+
+    useEffect(() => {
+        handleGetListList(boardId);
+    }, [boardId])
+
+
+    const handleOnSelectBoard = (id: any) => {
+        setListId(undefined);
+        setBoardId(id);
+    }
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setShowAppbarTitle(true);
+            console.log(workspaceInfo)
+        }, 1000);
+
+        return () => clearTimeout(timer);
+    }, [workspaceInfo]);
+
+    
+    console.log('workspace name:', workspaceInfo?.name);
 
     return (
         <>
@@ -94,10 +252,12 @@ const WorkspaceScreen = () => {
                         icon="menu"
                         onPress={() => drawerNavigation.openDrawer()}
                     />
-                    <Appbar.Content title="Your Workspace" />
-                    <Appbar.Action icon="magnify" />
+                    {showAppbarTitle && (
+                        <Appbar.Content title={workspaceInfo?.name ?? 'Your workspace'} />
+                    )}
+                    <Appbar.Action icon="magnify" onPress={()=>navigation.navigate("SearchWorkspace",{workspaceId:workspaceId})}/>
                     <Appbar.Action icon="bell" />
-                    <Appbar.Action icon="dots-vertical" />
+                    <Appbar.Action icon="dots-vertical" onPress={() => navigation.navigate("MemberWorkspace", {workspaceId:workspaceId, name: workspaceInfo?.name })}/>
                 </Appbar.Header>
 
                 <ThemedView style={{ width: "100%", height: '100%' }}>
