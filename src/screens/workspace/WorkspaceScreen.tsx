@@ -83,7 +83,7 @@ const WorkspaceScreen = (props: any) => {
     const [listWorkspaceBoard, setListWorkspaceBoard] = useState<BoardResponse[]>([]);
 
     const [workspaceInfo, setWorkspaceInfor] = useState<any | null>(null);
-    const [workspaceId, setWorkspaceId] = useState(route.params?.workspaceId ?? null);
+    const [workspaceId, setWorkspaceId] = useState<number | null>(route.params?.workspaceId ?? null);
 
     const [boardId, setBoardId] = useState<string | undefined>(undefined);
     const [listId, setListId] = useState<string | undefined>(undefined);
@@ -101,20 +101,16 @@ const WorkspaceScreen = (props: any) => {
                 value: board.id,
             }));
             setListBoard(boardOptions)
-            console.log(boardOptions, 'board options')
         }
     }
 
     const handleGetListList = async (boardId: any) => {
-        console.log(boardId, 'list')
         const res = await listService.getList('/get', '', { boardId: boardId });
-        console.log(res);
         if (res && res.code === "SUCCESS") {
             const listOptions = res.data.map((list: any) => ({
                 label: list.name,
                 value: list.id,
             }));
-            console.log(listOptions, 'list')
             setListList(listOptions)
         }
     }
@@ -146,8 +142,6 @@ const WorkspaceScreen = (props: any) => {
             const res = await workspaceService.getById(id);
             if (res && res.code === "SUCCESS") {
                 setWorkspaceInfor(res.data)
-                const id = res?.data?.workspace?.id;
-                setWorkspaceId(id);
             }
         } catch (e) {
             console.log(e)
@@ -176,7 +170,6 @@ const WorkspaceScreen = (props: any) => {
                 const res = await boardService.getListBoardByWorkspaceId('/get', '', { workspaceId: workspaceId })
                 if (res && res.code === "SUCCESS") {
                     setListWorkspaceBoard(res.data)
-                    console.log(res.data)
                 }
             } catch (e) {
                 console.log(e)
@@ -186,26 +179,25 @@ const WorkspaceScreen = (props: any) => {
     }
 
     useEffect(() => {
+        console.log('first')
         if (!workspaceId) {
             handleGetUserWorkspace();
         }
     }, []);
 
     useEffect(() => {
+        console.log('second')
+        console.log('ws id', workspaceId)
         if (workspaceId) {
             handleGetWorkspaceInfor(workspaceId);
             handleGetListBoard();
             handleGetBoardOptions();
         }
-        console.log('ws id:', workspaceId)
     }, [workspaceId]);
 
 
     const [showAppbarTitle, setShowAppbarTitle] = useState(false);
 
-    useEffect(() => {
-        handleGetBoardOptions();
-    }, [])
 
     useEffect(() => {
         handleGetListList(boardId);
@@ -225,14 +217,6 @@ const WorkspaceScreen = (props: any) => {
 
         return () => clearTimeout(timer);
     }, [workspaceInfo]);
-
-    useEffect(() => {
-        if (workspaceId) {
-            // Fetch data or update state based on new workspaceId
-            console.log("Workspace ID changed to:", workspaceId);
-            // Example: fetchBoardsForWorkspace(workspaceId)
-        }
-    }, [workspaceId]);
 
 
 

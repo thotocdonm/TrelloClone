@@ -1,9 +1,9 @@
 import { useNavigation, useRoute } from "@react-navigation/native";
-import { StyleSheet, Text, View } from "react-native";
+import { Alert, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { Appbar, IconButton, TextInput, Icon } from 'react-native-paper';
 import ThemedView from "../../shared/components/ThemedView";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { RootNavigationProp, RootRouteProp } from "../../types/types";
 import { ScrollView } from "react-native-gesture-handler";
 import { DatePickerInput } from 'react-native-paper-dates';
@@ -12,20 +12,67 @@ import { CardResponse } from "../../types/auth.type";
 import { debounce } from "lodash";
 import dayjs from 'dayjs';
 import customParseFormat from 'dayjs/plugin/customParseFormat';
+import relativeTime from 'dayjs/plugin/relativeTime';
+
 
 dayjs.extend(customParseFormat);
+dayjs.extend(relativeTime);
 
 const CardDetailScreen = () => {
   const [startDate, setStartDate] = useState<Date | undefined>(undefined);
   const [endDate, setEndDate] = useState<Date | undefined>(undefined);
   const [description, setDescription] = useState('');
   const [cardName, setCardName] = useState<string>('');
+  const [comment, setComment] = useState<string>('');
   const navigation = useNavigation<RootNavigationProp<'CardDetail'>>();
   const param = useRoute<RootRouteProp<"CardDetail">>();
   const { cardId } = param.params;
 
   const [currentCard, setCurrentCard] = useState<CardResponse | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Add refs at the top of your component
+  const dataRef = useRef({
+    startDate,
+    endDate,
+    cardName,
+    description,
+  });
+
+  // Update refs when state changes
+  useEffect(() => {
+    dataRef.current = {
+      startDate,
+      endDate,
+      cardName,
+      description,
+    };
+  }, [startDate, endDate, cardName, description]);
+
+  // Modify your debounced function
+  const debouncedUpdate = useMemo(() => debounce(async () => {
+    const { startDate, endDate, cardName, description } = dataRef.current;
+    const data = {
+      start_date: startDate?.toLocaleDateString('en-GB'),
+      end_date: endDate?.toLocaleDateString('en-GB'),
+      name: cardName,
+      description
+    };
+    const res = await cardService.update(cardId, {
+      start_date: startDate?.toLocaleDateString('en-GB'),
+      end_date: endDate?.toLocaleDateString('en-GB'),
+      name: cardName,
+      description
+    });
+    if (res) {
+      handleGetCard();
+    }
+  }, 500), [cardId]);
+
+  // Simplified update handler
+  const handleUpdateCard = () => {
+    debouncedUpdate();
+  };
 
   const format = "DD/MM/YYYY HH:mm:ss"
 
@@ -38,7 +85,7 @@ const CardDetailScreen = () => {
       setCardName(data.name);
       setDescription(data.description);
 
-      const format = "DD/MM/YYYY HH:mm:ss";
+      const format = "DD/MM/YYYY";
 
       if (data.start_date) {
         setStartDate(dayjs(data.start_date, format).toDate());
@@ -50,26 +97,31 @@ const CardDetailScreen = () => {
     }
   };
 
+  const handleDeleteCard = async (id: number) => {
+    try {
+      const res = await cardService.delete(id);
+      navigation.goBack();
 
-  const debouncedUpdate = debounce(async (data) => {
+    } catch (e) {
+      console.log(e)
+    }
+  }
+
+  const handleAddComment = async () => {
+    const { startDate, endDate, cardName, description } = dataRef.current;
+    const data = {
+      start_date: startDate?.toLocaleDateString('en-GB'),
+      end_date: endDate?.toLocaleDateString('en-GB'),
+      name: cardName,
+      description,
+      comment: comment
+    };
     const res = await cardService.update(cardId, data);
-    console.log('debounce', res)
     if (res) {
       handleGetCard();
     }
-  }, 500);
+  }
 
-  const handleUpdateCard = (field: string, value: any) => {
-    console.log('update', field, value)
-    const data = {
-      start_date: value?.toLocaleDateString('en-GB') ?? startDate?.toLocaleDateString('en-GB'),
-      end_date: value?.toLocaleDateString('en-GB') ?? endDate?.toLocaleDateString('en-GB'),
-      name: cardName,
-      description: description,
-    };
-    console.log(data)
-    debouncedUpdate(data);
-  };
 
   useEffect(() => {
     handleGetCard();
@@ -92,7 +144,8 @@ const CardDetailScreen = () => {
             value={cardName}
             onChangeText={(e) => {
               setCardName(e)
-              handleUpdateCard('name', cardName)
+              dataRef.current.cardName = e;
+              debouncedUpdate();
             }}
             onBlur={() => setIsEditing(false)}
             autoFocus
@@ -107,7 +160,23 @@ const CardDetailScreen = () => {
             onPress={() => setIsEditing(true)}
           />
         )}
-        <Appbar.Action icon="dots-vertical" />
+        <TouchableOpacity
+          onPress={() => {
+            Alert.alert(
+              'Delete Card',
+              'Are you sure you want to delete this card?',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Delete', onPress: () => handleDeleteCard(cardId) }
+              ]
+            );
+          }}
+        >
+          <IconButton
+            icon="trash-can-outline"
+            size={20}
+          />
+        </TouchableOpacity>
       </Appbar.Header>
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -121,7 +190,8 @@ const CardDetailScreen = () => {
             value={description}
             onChangeText={(e) => {
               setDescription(e)
-              handleUpdateCard('description', description)
+              dataRef.current.description = e;
+              debouncedUpdate();
             }}
           />
         </View>
@@ -136,7 +206,8 @@ const CardDetailScreen = () => {
                 value={startDate}
                 onChange={(d) => {
                   setStartDate(d)
-                  handleUpdateCard('start_date', d)
+                  dataRef.current.startDate = d;
+                  debouncedUpdate();
                 }}
                 inputMode="start"
                 style={styles.dateInput}
@@ -154,7 +225,8 @@ const CardDetailScreen = () => {
                 value={endDate}
                 onChange={(d) => {
                   setEndDate(d)
-                  handleUpdateCard('end_date', d)
+                  dataRef.current.endDate = d;
+                  debouncedUpdate();
                 }}
                 inputMode="end"
                 style={styles.dateInput}
@@ -179,6 +251,30 @@ const CardDetailScreen = () => {
           <Text style={styles.label}>Hoạt động</Text>
           <IconButton icon="dots-vertical" size={20} style={[styles.iconRight, { backgroundColor: "transparent" }]} onPress={() => { }} />
         </View>
+
+        <View style={commentStyles.container}>
+          {
+            currentCard?.comment && currentCard.comment.length > 0 &&
+            currentCard.comment.map((comment) => {
+              return (
+                <View key={comment.id} style={commentStyles.commentContainer}>
+                  <View style={commentStyles.content}>
+                    <View style={commentStyles.header}>
+                      <Text style={commentStyles.name}>
+                        {comment.author.first_name} {comment.author.last_name}
+                      </Text>
+                      <Text style={commentStyles.time}>
+                        {dayjs(comment.created_at).fromNow()}
+                      </Text>
+                    </View>
+                    <Text style={commentStyles.text}>{comment.content}</Text>
+                  </View>
+                </View>
+              )
+            })
+          }
+        </View>
+
       </ScrollView>
 
       {/* Fixed Bottom Comment Box */}
@@ -186,9 +282,12 @@ const CardDetailScreen = () => {
         <Icon source="sticker-check-outline" size={20} />
         <TextInput
           style={styles.commentInput}
+          value={comment}
+          onChangeText={setComment}
           mode="outlined"
           label="Thêm nhận xét"
           placeholder="Type something"
+          onSubmitEditing={() => handleAddComment()}
         />
         <IconButton icon="file-upload" size={20} style={styles.iconRight} onPress={() => { }} />
       </View>
@@ -252,5 +351,46 @@ const styles = StyleSheet.create({
     height: 40,
     backgroundColor: "#1c1c1e",
     borderRadius: 20,
+  },
+});
+
+const commentStyles = StyleSheet.create({
+  container: {
+  },
+  commentContainer: {
+    flexDirection: 'row',
+    marginBottom: 10,
+    backgroundColor: '#2b2b2b',
+    borderRadius: 5,
+    padding: 10,
+  },
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 10,
+    backgroundColor: '#ccc',
+  },
+  content: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    marginBottom: 4,
+    alignItems: 'center',
+  },
+  name: {
+    fontWeight: '600',
+    marginRight: 8,
+    color: 'white'
+  },
+  time: {
+    color: '#888',
+    fontSize: 12,
+  },
+  text: {
+    fontSize: 14,
+    color: 'white',
+    lineHeight: 18,
   },
 });

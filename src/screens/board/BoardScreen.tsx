@@ -1,5 +1,5 @@
 import { useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
-import { KeyboardAvoidingView, Platform, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
+import { Alert, KeyboardAvoidingView, Platform, Pressable, StatusBar, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { Provider as PaperProvider, Appbar, Button, IconButton, TextInput, Icon } from 'react-native-paper';
 import ThemedView from "../../shared/components/ThemedView";
@@ -21,73 +21,10 @@ const BoardScreen = () => {
     const route = useRoute<RootRouteProp<'Board'>>();
     const { boardId } = route.params;
 
-    const mockWorkspaceBoard =
-    {
-        id: 1,
-        created_at: '2025-05-09T14:30:00.000000Z',
-        updated_at: '2025-05-09T14:45:00.000000Z',
-        is_deleted: 0,
-        name: 'Project Alpha',
-        background_color: '#3498db',  // Trello Blue
-        workspace_id: 1,
-        workspace: {
-            id: 1,
-            name: 'Marketing Team',
-            description: 'Workspace for the marketing team',
-        },
-    }
-
-    const mockLists = [
-        {
-            id: 1,
-            name: 'To Do',
-            board_id: 1,
-            created_at: '2025-05-09T14:30:00.000Z',
-            updated_at: '2025-05-09T14:45:00.000Z',
-            is_deleted: false,
-        },
-        {
-            id: 2,
-            name: 'In Progress',
-            board_id: 1,
-            created_at: '2025-05-09T15:00:00.000Z',
-            updated_at: '2025-05-09T15:10:00.000Z',
-            is_deleted: false,
-        },
-        {
-            id: 3,
-            name: 'Done',
-            board_id: 1,
-            created_at: '2025-05-09T15:30:00.000Z',
-            updated_at: '2025-05-09T15:45:00.000Z',
-            is_deleted: false,
-        },
+    const data = [
+        { label: 'Edit', value: 'edit' },
+        { label: 'Delete', value: 'delete' },
     ];
-
-    const mockCards = [
-        {
-            id: 1,
-            name: 'To Do',
-            created_at: '2025-05-09T14:30:00.000Z',
-            updated_at: '2025-05-09T14:45:00.000Z',
-            is_deleted: false,
-        },
-        {
-            id: 2,
-            name: 'In Progress',
-            created_at: '2025-05-09T15:00:00.000Z',
-            updated_at: '2025-05-09T15:10:00.000Z',
-            is_deleted: false,
-        },
-        {
-            id: 3,
-            name: 'Done',
-            created_at: '2025-05-09T15:30:00.000Z',
-            updated_at: '2025-05-09T15:45:00.000Z',
-            is_deleted: false,
-        },
-    ];
-
 
 
     const [cardContent, setCardContent] = useState('');
@@ -104,6 +41,24 @@ const BoardScreen = () => {
     const [scrollEnabled, setScrollEnabled] = useState(true);
     const scrollViewRef = useRef<ScrollView>(null);
     const [scrollOffset, setScrollOffset] = useState(0);
+    const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+
+    const [editingListId, setEditingListId] = useState<number | null>(null);
+    const [editedName, setEditedName] = useState('');
+
+    const [value, setValue] = useState(null);
+    const dropdownRef = useRef(null);
+
+    const handleSelect = (item: any) => {
+        setValue(item.value);
+        if (item.value === 'edit') {
+            // Handle edit
+            console.log('Edit clicked');
+        } else if (item.value === 'delete') {
+            // Handle delete
+            console.log('Delete clicked');
+        }
+    };
 
     const handleFocus = () => {
         setScrollEnabled(false);
@@ -190,6 +145,32 @@ const BoardScreen = () => {
 
     }
 
+    const handleDeleteList = async (id: number) => {
+        try {
+            const res = await listService.delete(id);
+            if (res && res.code === "SUCCESS") {
+                getBoardData(null);
+            }
+        } catch (e) {
+            console.log(e)
+        }
+    }
+
+    const handleSaveListName = async (listId: any) => {
+        // Save edited name logic here (e.g., API call or state update)
+        console.log(`Saving list ${listId} name:`, editedName);
+        try {
+            const res = await listService.update(listId, { name: editedName })
+            console.log(res)
+            if (res) {
+                getBoardData(null);
+            }
+        } catch (e) {
+            console.log(e)
+        }
+        setEditingListId(null);
+    };
+
     useEffect(() => {
         getBoardData(null);
     }, [])
@@ -216,6 +197,24 @@ const BoardScreen = () => {
 
 
     const styles = StyleSheet.create({
+        menuContainer: {
+            position: 'absolute',
+            right: 10,
+            top: 40,
+            backgroundColor: 'white',
+            borderRadius: 8,
+            padding: 8,
+            width: 150,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.25,
+            shadowRadius: 4,
+            elevation: 5,
+            zIndex: 100,
+        },
+        menuItem: {
+            padding: 12,
+        },
         container: {
             backgroundColor: currentBoard?.background_color,
             overflow: 'hidden',
@@ -329,7 +328,51 @@ const BoardScreen = () => {
                             >
                                 {currentBoard?.boardlists?.map(list => (
                                     <View key={list.id} style={styles.list}>
-                                        <Text style={{ fontWeight: 'bold', fontSize: 14, color: 'white' }}>{list.name}</Text>
+                                        <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            {editingListId === list.id ? (
+                                                <TextInput
+                                                    style={{
+                                                        flex: 1, backgroundColor: 'transparent', color: 'white'
+                                                    }}
+                                                    value={editedName}
+                                                    onChangeText={setEditedName}
+                                                    autoFocus
+                                                    onBlur={() => handleSaveListName(list.id)}
+                                                    onSubmitEditing={() => handleSaveListName(list.id)}
+                                                    underlineColor="transparent"
+                                                    activeUnderlineColor="transparent"
+                                                    dense
+                                                />
+                                            ) : (
+                                                <TouchableOpacity
+                                                    style={{ flex: 1 }}
+                                                    onPress={() => {
+                                                        setEditingListId(list.id);
+                                                        setEditedName(list.name);
+                                                    }}
+                                                >
+                                                    <Text style={{ fontWeight: 'bold', fontSize: 14, color: 'white' }}>
+                                                        {list.name}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            )}
+                                            <IconButton
+                                                icon="trash-can-outline"
+                                                size={20}
+                                                onPress={() => {
+                                                    setOpenMenuId(null);
+                                                    Alert.alert(
+                                                        'Delete List',
+                                                        'Are you sure you want to delete this list?',
+                                                        [
+                                                            { text: 'Cancel', style: 'cancel' },
+                                                            { text: 'Delete', onPress: () => handleDeleteList(list.id) }
+                                                        ]
+                                                    );
+                                                }}
+                                            />
+                                        </View>
+
 
                                         {/* Cards inside this list */}
                                         <DraggableFlatList

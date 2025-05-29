@@ -58,7 +58,7 @@ class BaseService<T> {
         }
     }
 
-    async delete(id: number | string, path: string = '', urlAfter: string = ''): Promise<BaseResponse<T>> {
+    async delete(id: number | string, path: string = '/delete', urlAfter: string = ''): Promise<BaseResponse<T>> {
         try {
             const url = this.getUrl(`${path}/${id}`, urlAfter);
             const response = await api.delete(url);
