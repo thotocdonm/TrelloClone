@@ -74,6 +74,25 @@ export type CardResponse = {
     end_date: string;
     tasks: Task[];
     listCard: number;
+    comment: Comment[];
+};
+export type Author = {
+    profile_picture: string | null;
+    bio: string | null;
+    address: string | null;
+    email: string;
+    username: string;
+    phone_number: string;
+    last_name: string;
+    first_name: string;
+    role: 'WORKSPACEOWN' | string; // You can replace `string` with other possible roles
 };
 
+export type Comment = {
+    id: number;
+    content: string;
+    author: Author;
+    created_at: string; // ISO date string
+    updated_at: string; // ISO date string
+};
 // export type SearchWorkspaceResponse = {

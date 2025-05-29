@@ -20,8 +20,8 @@ import SearchUserToAddScreen from "../screens/workspace/SearchUserToAddScreen";
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
-  // const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const isAuthenticated = true;
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  // const isAuthenticated = true;
   const setIsAuthenticated = useAuthStore((state) => state.setIsAuthenticated);
 
   useEffect(() => {

@@ -1,12 +1,14 @@
 import React from 'react';
-import { StyleSheet, useColorScheme } from 'react-native';
+import { StyleSheet, useColorScheme, View } from 'react-native';
 import AppNavigator from './navigation/AppNavigator';
 import {
   DefaultTheme as PaperDefaultTheme,
   MD3DarkTheme as PaperDarkTheme,
   PaperProvider,
+  Text,
 } from 'react-native-paper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import Toast from 'react-native-toast-message';
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -55,6 +57,16 @@ function App(): React.JSX.Element {
   return (
     <GestureHandlerRootView style={styles.container}>
       <PaperProvider theme={theme}>
+        <Toast
+          config={{
+            error: ({ text1, text2 }) => (
+              <View style={{ backgroundColor: '#e74c3c', padding: 10, borderRadius: 5 }}>
+                <Text style={{ color: 'white', fontWeight: 'bold' }}>{text1}</Text>
+                <Text style={{ color: 'white' }}>{text2}</Text>
+              </View>
+            ),
+          }}
+        />
         <AppNavigator />
       </PaperProvider>
     </GestureHandlerRootView>

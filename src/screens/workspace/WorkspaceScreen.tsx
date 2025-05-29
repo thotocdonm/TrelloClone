@@ -1,53 +1,38 @@
-import { useNavigation } from "@react-navigation/native";
-import { Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
+import { RouteProp, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import { Alert, Pressable, StatusBar, StyleSheet, Text, View } from "react-native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
-import { Provider as PaperProvider, Appbar, Button, IconButton, TextInput } from 'react-native-paper';
+import { Provider as PaperProvider, Appbar, Button, IconButton, TextInput, Portal, Modal } from 'react-native-paper';
 import ThemedView from "../../shared/components/ThemedView";
 import ThemedText from "../../shared/components/ThemedText";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { RootNavigationProp } from "../../types/types";
+import { Dropdown } from "react-native-paper-dropdown";
+import workspaceService from "../../services/Workspace/workspaceService";
+import listService from "../../services/Board/listService";
+import boardService from "../../services/Board/boardService";
+import cardService from "../../services/Board/cardService";
+import Toast from "react-native-toast-message";
+import { BoardResponse, WorkspaceResponse } from "../../types/auth.type";
 
-const WorkspaceScreen = () => {
+type WorkspaceScreenRouteProp = RouteProp<{
+    Workspace: { workspaceId: number };
+}, 'Workspace'>;
+
+
+const WorkspaceScreen = (props: any) => {
     const drawerNavigation = useNavigation<DrawerNavigationProp<any>>();
     const navigation = useNavigation<RootNavigationProp<'Workspace'>>();
 
-    const mockWorkspaceBoards = [
-        {
-            id: 1,
-            created_at: '2025-05-09T14:30:00.000000Z',
-            updated_at: '2025-05-09T14:45:00.000000Z',
-            is_deleted: 0,
-            name: 'Project Alpha',
-            background_color: '#3498db',  // Trello Blue
-            workspace_id: 1,
-            workspace: {
-                id: 1,
-                name: 'Marketing Team',
-                description: 'Workspace for the marketing team',
-            },
-        },
-        {
-            id: 2,
-            created_at: '2025-05-10T09:15:00.000000Z',
-            updated_at: '2025-05-10T09:30:00.000000Z',
-            is_deleted: 0,
-            name: 'Product Development',
-            background_color: '#e74c3c',  // Red color for the second board
-            workspace_id: 2,
-            workspace: {
-                id: 2,
-                name: 'Engineering Team',
-                description: 'Workspace for the engineering team',
-            },
-        },
-    ];
+    const route = useRoute<WorkspaceScreenRouteProp>();
+
+
 
     const styles = StyleSheet.create({
         boardContainer: {
             padding: 10,
             margin: 16,
-            backgroundColor: mockWorkspaceBoards[0].background_color,
             overflow: 'hidden',
+            backgroundColor: '#3498db',
             borderRadius: 16
         },
         board: {
@@ -80,6 +65,14 @@ const WorkspaceScreen = () => {
             alignItems: 'center',
             borderRadius: 16
         },
+        modal: {
+            backgroundColor: 'rgb(0, 0, 0)',
+            paddingHorizontal: 20,
+            width: '80%',
+            alignSelf: 'center', // Centers horizontally
+            marginTop: 'auto', // Centers vertically with marginBottom
+            marginBottom: 'auto',
+        }
 
     });
 
@@ -90,7 +83,7 @@ const WorkspaceScreen = () => {
     const [listWorkspaceBoard, setListWorkspaceBoard] = useState<BoardResponse[]>([]);
 
     const [workspaceInfo, setWorkspaceInfor] = useState<any | null>(null);
-    const [workspaceId, setWorkspaceId] = useState(route.params?.workspaceId ?? null);
+    const [workspaceId, setWorkspaceId] = useState<number | null>(route.params?.workspaceId ?? null);
 
     const [boardId, setBoardId] = useState<string | undefined>(undefined);
     const [listId, setListId] = useState<string | undefined>(undefined);
@@ -108,21 +101,16 @@ const WorkspaceScreen = () => {
                 value: board.id,
             }));
             setListBoard(boardOptions)
-            console.log(boardOptions, 'board options')
-            console.log('workspace ID handleGetBoardOptions:', workspaceId)
         }
     }
 
     const handleGetListList = async (boardId: any) => {
-        console.log(boardId, 'list')
         const res = await listService.getList('/get', '', { boardId: boardId });
-        console.log(res);
         if (res && res.code === "SUCCESS") {
             const listOptions = res.data.map((list: any) => ({
                 label: list.name,
                 value: list.id,
             }));
-            console.log(listOptions, 'list')
             setListList(listOptions)
         }
     }
@@ -154,11 +142,6 @@ const WorkspaceScreen = () => {
             const res = await workspaceService.getById(id);
             if (res && res.code === "SUCCESS") {
                 setWorkspaceInfor(res.data)
-                // const id = res?.data?.workspace?.id;
-                // setWorkspaceId(id);
-                console.log(res.data)
-                console.log('workspace ID handleGetWorkspaceInfor:', workspaceId)
-                
             }
         } catch (e) {
             console.log(e)
@@ -187,8 +170,6 @@ const WorkspaceScreen = () => {
                 const res = await boardService.getListBoardByWorkspaceId('/get', '', { workspaceId: workspaceId })
                 if (res && res.code === "SUCCESS") {
                     setListWorkspaceBoard(res.data)
-                    console.log(res.data)
-                    console.log('workspace ID handleGetListBoard:', workspaceId)
                 }
             } catch (e) {
                 console.log(e)
@@ -198,28 +179,25 @@ const WorkspaceScreen = () => {
     }
 
     useEffect(() => {
+        console.log('first')
         if (!workspaceId) {
             handleGetUserWorkspace();
         }
     }, []);
 
     useEffect(() => {
+        console.log('second')
+        console.log('ws id', workspaceId)
         if (workspaceId) {
             handleGetWorkspaceInfor(workspaceId);
             handleGetListBoard();
             handleGetBoardOptions();
         }
-        
-
     }, [workspaceId]);
 
 
     const [showAppbarTitle, setShowAppbarTitle] = useState(false);
 
-    useEffect(() => {
-        handleGetBoardOptions();
-
-    }, [])
 
     useEffect(() => {
         handleGetListList(boardId);
@@ -240,8 +218,20 @@ const WorkspaceScreen = () => {
         return () => clearTimeout(timer);
     }, [workspaceInfo]);
 
-    
-    console.log('workspace name:', workspaceInfo?.name);
+
+    useFocusEffect(
+        useCallback(() => {
+            console.log('abx')
+            if (workspaceId) {
+                handleGetWorkspaceInfor(workspaceId);
+                handleGetListBoard();
+                handleGetBoardOptions();
+            } else (
+                handleGetUserWorkspace()
+            )
+        }, [])
+    );
+
 
     return (
         <>
@@ -266,10 +256,10 @@ const WorkspaceScreen = () => {
                             <View style={{ display: 'flex', justifyContent: 'space-between', flexDirection: 'row', alignItems: 'flex-start' }}>
                                 <View>
                                     <ThemedText style={{ fontWeight: 'bold' }}>
-                                        Board name
+                                        {listBoard.find((item: any) => item.value === boardId)?.label || "Board name"}
                                     </ThemedText>
                                     <ThemedText>
-                                        Card name
+                                        {listList.find((item: any) => item.value === listId)?.label || "List name"}
                                     </ThemedText>
                                 </View>
 
@@ -277,7 +267,7 @@ const WorkspaceScreen = () => {
                                 <IconButton
                                     icon='pencil'
                                     size={24}
-                                    onPress={() => console.log('Pressed')}
+                                    onPress={showModal}
                                     accessibilityLabel="Avatar button"
                                 />
                             </View>
@@ -289,7 +279,7 @@ const WorkspaceScreen = () => {
                                     value={cardContent}
                                     onChangeText={setCardContent}
                                     right={
-                                        cardContent ? <TextInput.Icon icon="check" onPress={() => console.log('check clicked')} /> : null
+                                        cardContent ? <TextInput.Icon icon="check" color='green' onPress={() => handleAddCardShortcut()} /> : null
                                     }
                                 >
 
@@ -301,21 +291,21 @@ const WorkspaceScreen = () => {
 
                     <ThemedView style={{ backgroundColor: 'black', padding: 16, display: 'flex', alignItems: 'flex-start' }}>
                         <ThemedText>
-                            Không gian làm việc của Nguyễn Minh Sơn
+                            Không gian làm việc của {workspaceInfo?.user}
                         </ThemedText>
                     </ThemedView>
 
                     {
-                        mockWorkspaceBoards && mockWorkspaceBoards.length > 0 &&
-                        mockWorkspaceBoards.map(workspace => {
+                        listWorkspaceBoard && listWorkspaceBoard.length > 0 &&
+                        listWorkspaceBoard.map(board => {
                             return (
-                                <Pressable key={workspace.id} onPress={() => navigation.navigate('Board', { id: workspace.id })}>
-                                    <ThemedView key={workspace.id} style={{ display: 'flex', gap: 20, alignItems: 'center', flexDirection: 'row', padding: 10 }}>
-                                        <ThemedView style={{ backgroundColor: workspace.background_color, borderRadius: 3, overflow: 'hidden', width: 60, height: 40 }}>
+                                <Pressable key={board.id} onPress={() => navigation.navigate('Board', { boardId: board.id })}>
+                                    <ThemedView key={board.id} style={{ display: 'flex', gap: 20, alignItems: 'center', flexDirection: 'row', padding: 10 }}>
+                                        <ThemedView style={{ backgroundColor: board.background_color, borderRadius: 3, overflow: 'hidden', width: 60, height: 40 }}>
 
                                         </ThemedView>
                                         <ThemedText>
-                                            {workspace.name}
+                                            {board?.name}
                                         </ThemedText>
                                     </ThemedView>
                                 </Pressable>
@@ -329,6 +319,54 @@ const WorkspaceScreen = () => {
                     Tạo bảng
                 </Button>
             </ThemedView>
+
+            <Portal>
+                <Modal visible={isBoardVisible} onDismiss={hideModal} contentContainerStyle={styles.modal} theme={{ colors: { primary: '#0079BF' } }}>
+                    <View
+                        style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            borderBottomWidth: 1,
+                            borderBottomColor: '#ccc',
+                        }}
+                    >
+                        <IconButton
+                            icon="close"
+                            size={24}
+                            onPress={hideModal}
+                            accessibilityLabel="Close modal"
+                        />
+                        <Text style={{ fontSize: 18, fontWeight: 'bold', color: 'white' }}>Thay đổi vị trí</Text>
+                        <IconButton
+                            icon="check"
+                            size={24}
+                            onPress={hideModal}
+                            accessibilityLabel="Confirm action"
+                        />
+                    </View>
+                    <View style={{ paddingVertical: 20, display: 'flex', flexDirection: 'column', gap: 20 }}>
+                        <Dropdown
+                            mode="flat"
+                            label="Đến"
+                            placeholder="Bảng"
+                            options={listBoard}
+                            value={boardId}
+                            onSelect={(id) => (handleOnSelectBoard(id))}
+                            hideMenuHeader={true}
+                        />
+                        <Dropdown
+                            mode="flat"
+                            label="Danh sách"
+                            placeholder="Danh sách"
+                            options={listList}
+                            value={listId}
+                            onSelect={setListId}
+                            hideMenuHeader={true}
+                        />
+                    </View>
+                </Modal>
+            </Portal>
         </>
 
     )

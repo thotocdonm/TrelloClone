@@ -1,12 +1,14 @@
 import { useNavigation } from "@react-navigation/native";
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Alert, Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { DrawerNavigationProp } from "@react-navigation/drawer";
 import { Provider as PaperProvider, Appbar, Button, IconButton, TextInput, Portal, Modal } from 'react-native-paper';
 import ThemedView from "../../shared/components/ThemedView";
 import ThemedText from "../../shared/components/ThemedText";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dropdown } from "react-native-paper-dropdown";
 import ColorPicker from "react-native-wheel-color-picker";
+import boardService from "../../services/Board/boardService";
+import workspaceService from "../../services/Workspace/workspaceService";
 
 const CreateBoardScreen = () => {
     const navigation = useNavigation<DrawerNavigationProp<any>>();
@@ -58,19 +60,44 @@ const CreateBoardScreen = () => {
 
     });
 
-    const OPTIONS = [
-        { label: 'Male', value: 'male' },
-        { label: 'Female', value: 'female' },
-        { label: 'Other', value: 'other' },
-    ];
+
 
     const [visible, setVisible] = useState(false);
     const [boardName, setBoardName] = useState('');
-    const [workspace, setWorkspace] = useState<string | undefined>(OPTIONS[0].value);
+    const [workspace, setWorkspace] = useState<string | undefined>(undefined);
     const [backgroundColor, setBackgroundColor] = useState('#0079BF');
+    const [listWorkspace, setListWorkspace] = useState<any>([]);
 
     const showModal = () => setVisible(true);
     const hideModal = () => setVisible(false);
+
+    const handleAddBoard = async () => {
+        const res = await boardService.create({ name: boardName, workspace: workspace, background_color: backgroundColor });
+        if (res && res.code === "SUCCESS") {
+            Alert.alert('Thành công', res.message || 'Bảng đã được thêm.');
+        }
+    }
+
+    const getListWorkspace = async () => {
+        const res = await workspaceService.getList();
+        if (res && res.code === "SUCCESS") {
+            const workspaceOptions = res.data.map((item: any) => ({
+                label: item.workspace.name,
+                value: item.workspace.id,
+            }));
+            setListWorkspace(workspaceOptions)
+            setWorkspace(listWorkspace[0].value)
+        }
+    }
+
+    useEffect(() => {
+        getListWorkspace()
+    }, [])
+
+    useEffect(() => {
+        console.log(listWorkspace)
+    }, [listWorkspace])
+
 
 
     return (
@@ -88,8 +115,8 @@ const CreateBoardScreen = () => {
                 <Dropdown
                     mode="outlined"
                     label="Không gian làm việc"
-                    placeholder="Select Gender"
-                    options={OPTIONS}
+                    placeholder="Select Workspace"
+                    options={listWorkspace}
                     value={workspace}
                     onSelect={setWorkspace}
                 />
@@ -105,7 +132,7 @@ const CreateBoardScreen = () => {
                 </ThemedView>
             </ThemedView>
 
-            <Button style={styles.addBtn} mode="contained" disabled={boardName.length > 0 ? false : true}>
+            <Button style={styles.addBtn} mode="contained" disabled={boardName.length > 0 ? false : true} onPress={() => handleAddBoard()}>
                 <Text style={{ textAlign: 'center', fontSize: 16 }}>Tạo bảng</Text>
             </Button>
 
